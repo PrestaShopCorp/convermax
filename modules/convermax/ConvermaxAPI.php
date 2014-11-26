@@ -3,10 +3,6 @@
 Class ConvermaxAPI
 {
 
-    //private static $cert = _PS_MODULE_DIR_.'convermax/prestashop_key+cert.pem';
-    //private static $cert = '/home/demo/prestashop/www/modules/convermax/prestashop_key+cert.pem';
-    //private static $base_url = 'https://api.convermax.com/v2test/4f199abe/';
-
     private $base_url;
     private $hash;
     private $cert;
