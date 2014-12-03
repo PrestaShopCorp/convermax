@@ -3,11 +3,15 @@
 Class ConvermaxAPI
 {
 
+    //private static $cert = _PS_MODULE_DIR_.'convermax/prestashop_key+cert.pem';
+    //private static $cert = '/home/demo/prestashop/www/modules/convermax/prestashop_key+cert.pem';
+    //private static $base_url = 'https://api.convermax.com/v2test/4f199abe/';
+
     private $base_url;
     private $hash;
     private $cert;
 
-    public function  __construct($base_url, $hash, $cert)
+    public function  __construct($base_url, $hash, $cert = '')
     {
         $this->base_url = $base_url;
         $this->hash = $hash;
@@ -76,9 +80,13 @@ Class ConvermaxAPI
         return true;
     }
 
-    public function search($query)
+    public function search($query, $facets)
     {
-        $url = $this->base_url.$this->hash.'/search/json/'.urlencode($query);
+        $url = $this->base_url.$this->hash.'/search/json?query='.urlencode($query);
+        if ($facets)
+        {
+            //q
+        }
         //$header = array('Content-Type: application/json; charset=utf-8');
         $ch = curl_init($url);
 //$ch = curl_init('http://120.0.0.1/v2dev/fabbdc26/update/add');

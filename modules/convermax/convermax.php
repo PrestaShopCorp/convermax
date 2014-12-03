@@ -23,12 +23,18 @@ Class Convermax extends Module
 
     public function install()
     {
-        return parent::install();
+        //return parent::install();
+        parent::install();
+        $this->registerHook('leftColumn');
+        $this->registerHook('leftColumn');
 
         //to delete
-        Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2test/');
+        Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2dev/');
         Configuration::updateValue('CONVERMAX_HASH', '4f199abe');
         Configuration::updateValue('CONVERMAX_CERT', '/home/demo/prestashop/www/modules/convermax/prestashop_key+cert.pem');
+
+
+        return true;
     }
 
     public function uninstall()
@@ -41,8 +47,32 @@ Class Convermax extends Module
 
     }
 
-    private function sendToIndexation()
+    public function hookLeftColumn($params)
     {
-        //$d
+        //return $this->generateFacetsBlock($this->getFacets());
+        if (get_class($this->context->controller) == 'SearchController')
+        {
+            //return '<h4>FACETS BLOCK</h4>';
+            //$myvar = 'blabla';
+            $this->context->smarty->assign(array(
+                'myvar' => 'blabla2',
+            ));
+            return $this->display(__FILE__, 'facets.tpl');
+        }
+        return '';
+    }
+
+    public function hookHeader($params)
+    {
+        if (get_class($this->context->controller) == 'SearchController')
+        {
+            $this->context->controller->addJS(($this->_path).'convermax.js');
+            $this->context->controller->addCSS(($this->_path).'convermax.css');
+        }
+    }
+
+    public function ajaxCall()
+    {
+        return '<h4>AJAX CALL</h4>';
     }
 }
