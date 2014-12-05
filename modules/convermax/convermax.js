@@ -4,7 +4,7 @@ var cm_facet_vals = {
     values: [],
     Change: function(checked, value) {
         value = value.split('|');
-        //key = value[0];
+        //key = value[0];//
         if(checked) {
             this.values.push({key: value[0], val: value[1]});
             //this.values[].({key: value[0], val: value[1]});
