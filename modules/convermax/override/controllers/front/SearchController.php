@@ -63,15 +63,24 @@ class SearchController extends SearchControllerCore
         elseif (($query = Tools::getValue('search_query', Tools::getValue('ref'))) && !is_array($query))
         {
             $this->productSort();
+
+            //$this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+            //$this->p = abs((int)(Tools::getValue('p', 1)));
+
             $this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
             $this->p = abs((int)(Tools::getValue('p', 1)));
+
+
             $original_query = $query;
             $query = Tools::replaceAccentedChars(urldecode($query));
             $search = Search::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay);
             foreach ($search['result'] as &$product)
                 $product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'];
+
+
             Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
             $nbProducts = $search['total'];
+
             $this->pagination($nbProducts);
 
             $this->addColorsToProductList($search['result']);
@@ -117,8 +126,11 @@ class SearchController extends SearchControllerCore
 
         //$facets = print_r($search['facets'], 1);
         $smarty->assign(array(
-            'facets' => $search['cm_whole_result']->Facets,
-            'query' => $search['cm_whole_result']->Query,
+            'facets' => $search['cm_result']->Facets,
+            'query' => $search['cm_result']->Query,
+            'pagenumber' => $this->p,
+            'pagesize' => $this->n,
+            //'nbProducts' => 10994,
         ));
         parent::initContent();
     }

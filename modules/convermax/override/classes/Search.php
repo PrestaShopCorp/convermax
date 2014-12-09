@@ -226,7 +226,7 @@ Class Search extends SearchCore
         //$context->shop->id;
 
         $convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'), Configuration::get('CONVERMAX_HASH'));
-        $search_results = $convermax->search($expr, $facets);
+        $search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets);
         $product_pool = '';
         //foreach ($eligible_products as $id_product)
         foreach ($search_results->Items as $item)
@@ -301,10 +301,12 @@ Class Search extends SearchCore
 				LEFT JOIN `'._DB_PREFIX_.'image_lang` il ON (i.`id_image` = il.`id_image` AND il.`id_lang` = '.(int)$id_lang.')
 				WHERE p.`id_product` '.$product_pool.'
 				GROUP BY product_shop.id_product
-				'.($order_by ? 'ORDER BY  '.$alias.$order_by : '').($order_way ? ' '.$order_way : '').'
-				LIMIT '.(int)(($page_number - 1) * $page_size).','.(int)$page_size;
+				'.($order_by ? 'ORDER BY  '.$alias.$order_by : '').($order_way ? ' '.$order_way : ''); /*.'
+				LIMIT '.(int)(($page_number - 1) * $page_size).','.(int)$page_size;*/
         $result = $db->executeS($sql);
 
+
+        /*
         $sql = 'SELECT COUNT(*)
 				FROM '._DB_PREFIX_.'product p
 				'.Shop::addSqlAssociation('product', 'p').'
@@ -315,12 +317,14 @@ Class Search extends SearchCore
 				LEFT JOIN `'._DB_PREFIX_.'manufacturer` m ON m.`id_manufacturer` = p.`id_manufacturer`
 				WHERE p.`id_product` '.$product_pool;
         $total = $db->getValue($sql);
+        */
+        $total = $search_results->TotalHits;
 
         if (!$result)
             $result_properties = false;
         else
             $result_properties = Product::getProductsProperties((int)$id_lang, $result);
 
-        return array('total' => $total,'result' => $result_properties, 'cm_whole_result' => $search_results);
+        return array('total' => $total,'result' => $result_properties, 'cm_result' => $search_results);
     }
 }

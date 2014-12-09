@@ -80,12 +80,28 @@ Class ConvermaxAPI
         return true;
     }
 
-    public function search($query, $facets)
+    public function search($query, $page_number = 0, $page_size = 10, $facets = false)
     {
         $url = $this->base_url.$this->hash.'/search/json?query='.urlencode($query);
+        $url .= '&page=' . $page_number . '&pagesize=' . $page_size;
+        /*if ($facets)
+        {
+            $i = 0;
+            foreach ($facets as $key => $val)
+            {
+                $u .= '&facet.'.$i.'.field='.urlencode($key);
+                foreach ($val as $v)
+                {
+                    //facet.0.field=CurrentPrice&facet.0.selection=[100%20TO%20249.99]&facet.0.selection=[250%20TO%20399.99]&facet.0.selection=[400%20TO%20599.99]&
+                    $u .= '&facet.'.$i.'.selection='.urlencode($v);
+                }
+                $i++;
+            }
+            $url .= $u;
+        }*/
         if ($facets)
         {
-            //q
+            $url .= $facets;
         }
         //$header = array('Content-Type: application/json; charset=utf-8');
         $ch = curl_init($url);

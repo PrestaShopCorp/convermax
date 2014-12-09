@@ -73,6 +73,108 @@ Class Convermax extends Module
 
     public function ajaxCall()
     {
-        return '<h4>AJAX CALL</h4>';
+        //return '<h4>AJAX CALL</h4>';
+        global $smarty;
+        /*//$search = Search::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay);
+        $search = Search::find(1, 'print', 1, 1, 'position',
+            'desc', false, true, null, true);
+
+        $smarty->assign(array(
+            'search_products' => $search['result'],
+            'nbProducts' => $search['total'],
+            'search_query' => '$original_query',
+            'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
+
+        $product_list = $smarty->fetch(_PS_THEME_DIR_.'product-list.tpl');
+
+        $vars = array(
+            //'filtersBlock' => utf8_encode($this->generateFiltersBlock($selected_filters)),
+            'productList' => utf8_encode($product_list),
+            //'pagination' => $smarty->fetch(_PS_THEME_DIR_.'pagination.tpl'),
+            //'categoryCount' => $category_count,
+            //'meta_title' => $meta_title.' - '.Configuration::get('PS_SHOP_NAME'),
+            //'heading' => $meta_title,
+            //'meta_keywords' => isset($meta_keywords) ? $meta_keywords : null,
+            //'meta_description' => $meta_description,
+            //'current_friendly_url' => ((int)$n == (int)$nb_products) ? '#/show-all': '#'.$filter_block['current_friendly_url'],
+            //'filters' => $filter_block['filters'],
+            //'nbRenderedProducts' => (int)$nb_products,
+            //'nbAskedProducts' => (int)$n
+        );*/
+
+
+        //Controller::getController('SearchController')->myMethod();
+        //$query = 'print';
+        $query = Tools::getValue('cm_query');
+        //$page_number = Tools::getValue('page');
+        //$page_size = Tools::getValue('size');
+        //$query = Tools::getValue('search_query');
+        $original_query = $query;
+
+        $facets = $_GET['facets'];
+
+
+
+
+        $srch_cntrl = Controller::getController('SearchController');
+
+        $srch_cntrl->productSort();
+        $srch_cntrl->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+        $srch_cntrl->p = abs((int)(Tools::getValue('p', 1)));
+
+        //($id_lang, $expr, $page_number = 1, $page_size = 1, $order_by = 'position',
+        //$order_way = 'desc', $ajax = false, $use_cookie = true, Context $context = null, $facets = false)
+
+        //$srch_cntrl->p, $srch_cntrl->n, $this->orderBy, $this->orderWay
+
+        $search = Search::find($this->context->language->id, $query, $srch_cntrl->p, $srch_cntrl->n, 'position',
+            'desc', false, true, null, $facets);
+
+        Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
+        $nbProducts = $search['total'];
+        $srch_cntrl->pagination($nbProducts);
+
+        $srch_cntrl->addColorsToProductList($search['result']);
+
+        $smarty->assign(array(
+            'products' => $search['result'], // DEPRECATED (since to 1.4), not use this: conflict with block_cart module
+            'search_products' => $search['result'],
+            'nbProducts' => $search['total'],
+            'search_query' => $original_query,
+            'instant_search' => $srch_cntrl->instant_search,
+            'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
+
+
+        $list = $smarty->fetch(_PS_THEME_DIR_.'search.tpl');
+
+
+        $smarty->assign(array(
+            'facets' => $search['cm_result']->Facets,
+            'query' => $search['cm_result']->Query,
+            'pagenumber' => $srch_cntrl->p,
+            'pagesize' => $srch_cntrl->n
+        ));
+
+        $facets = $smarty->fetch(_PS_MODULE_DIR_.'convermax/facet.tpl');
+
+
+        $vars = array(
+            //'filtersBlock' => utf8_encode($this->generateFiltersBlock($selected_filters)),
+            'productList' => utf8_encode($list),
+            //'pagination' => $smarty->fetch(_PS_THEME_DIR_.'pagination.tpl'),
+            //'categoryCount' => $category_count,
+            //'meta_title' => $meta_title.' - '.Configuration::get('PS_SHOP_NAME'),
+            //'heading' => $meta_title,
+            //'meta_keywords' => isset($meta_keywords) ? $meta_keywords : null,
+            //'meta_description' => $meta_description,
+            //'current_friendly_url' => ((int)$n == (int)$nb_products) ? '#/show-all': '#'.$filter_block['current_friendly_url'],
+            //'filters' => $filter_block['filters'],
+            //'nbRenderedProducts' => (int)$nb_products,
+            //'nbAskedProducts' => (int)$n
+            'facets' => $facets
+        );
+
+        return Tools::jsonEncode($vars);
+        //return $list;
     }
 }
