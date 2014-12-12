@@ -26,7 +26,6 @@ Class Convermax extends Module
         //return parent::install();
         parent::install();
         $this->registerHook('leftColumn');
-        $this->registerHook('leftColumn');
 
         //to delete
         Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2dev/');
@@ -55,7 +54,8 @@ Class Convermax extends Module
             //return '<h4>FACETS BLOCK</h4>';
             //$myvar = 'blabla';
             $this->context->smarty->assign(array(
-                'myvar' => 'blabla2',
+                //'myvar' => 'blabla2',
+                'pagesize' => abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))))
             ));
             return $this->display(__FILE__, 'facets.tpl');
         }
@@ -70,6 +70,15 @@ Class Convermax extends Module
             $this->context->controller->addCSS(($this->_path).'convermax.css');
         }
     }
+
+    public function hkookTop($params)
+    {
+
+    }
+
+
+
+
 
     public function ajaxCall()
     {
@@ -105,11 +114,16 @@ Class Convermax extends Module
 
         //Controller::getController('SearchController')->myMethod();
         //$query = 'print';
-        $query = Tools::getValue('cm_query');
+
+        //$query = Tools::getValue('cm_query');
+        $query = Tools::getValue('search_query');
+
+        $original_query = $query;
+        $query = Tools::replaceAccentedChars(urldecode($query));
         //$page_number = Tools::getValue('page');
         //$page_size = Tools::getValue('size');
         //$query = Tools::getValue('search_query');
-        $original_query = $query;
+
 
         $facets = $_GET['facets'];
 
@@ -142,6 +156,7 @@ Class Convermax extends Module
             'nbProducts' => $search['total'],
             'search_query' => $original_query,
             'instant_search' => $srch_cntrl->instant_search,
+            //'errors' => array('custom error 1', 'custom error 2', 'custom error 3'),
             'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
 
 

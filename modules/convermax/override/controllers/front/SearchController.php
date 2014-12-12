@@ -85,11 +85,19 @@ class SearchController extends SearchControllerCore
 
             $this->addColorsToProductList($search['result']);
 
+            if (stripos($search['cm_result']->State, 'nothing'))
+                $cm_message = 'nothing found';
+            elseif ($search['cm_result']->Corrections[0]->Apply)
+                $cm_message = 'your request has been corrected to ' . $search['cm_result']->Corrections[0]->Replace;
+            else
+                $cm_message = false;
+
             $this->context->smarty->assign(array(
                 'products' => $search['result'], // DEPRECATED (since to 1.4), not use this: conflict with block_cart module
                 'search_products' => $search['result'],
                 'nbProducts' => $search['total'],
                 'search_query' => $original_query,
+                'cm_message' => $cm_message,
                 'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
         }
         elseif (($tag = urldecode(Tools::getValue('tag'))) && !is_array($tag))
@@ -118,7 +126,8 @@ class SearchController extends SearchControllerCore
         }
         $this->context->smarty->assign(array('add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'), 'comparator_max_item' => Configuration::get('PS_COMPARATOR_MAX_ITEM')));
 
-        $this->setTemplate(_PS_THEME_DIR_.'search.tpl');
+        //$this->setTemplate(_PS_THEME_DIR_.'search.tpl');
+        //$this->setTemplate(_PS_MODULE_DIR_.'convermax/searchm.tpl');
 
 
 
@@ -133,5 +142,6 @@ class SearchController extends SearchControllerCore
             //'nbProducts' => 10994,
         ));
         parent::initContent();
+        $this->setTemplate(_PS_MODULE_DIR_.'convermax/search.tpl');
     }
 }
