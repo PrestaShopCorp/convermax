@@ -68,6 +68,8 @@ Class Convermax extends Module
         {
             $this->context->controller->addJS(($this->_path).'convermax.js');
             $this->context->controller->addCSS(($this->_path).'convermax.css');
+            $url = Configuration::get('CONVERMAX_URL') . Configuration::get('CONVERMAX_HASH') . '/autocomplete/json';
+            Media::addJsDef(array('cm_autocomplete_url' => $url));
         }
     }
 
@@ -125,7 +127,8 @@ Class Convermax extends Module
         //$query = Tools::getValue('search_query');
 
 
-        $facets = $_GET['facets'];
+        //$facets = $_GET['facets'];
+        //$facets = Convermax::getFacets();
 
 
 
@@ -133,7 +136,10 @@ Class Convermax extends Module
         $srch_cntrl = Controller::getController('SearchController');
 
         $srch_cntrl->productSort();
-        $srch_cntrl->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+        //$srch_cntrl->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+
+        $srch_cntrl->n = abs((int)(Tools::getValue('n', (isset($srch_cntrl->context->cookie->nb_item_per_page) ? (int)$srch_cntrl->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE')))));
+
         $srch_cntrl->p = abs((int)(Tools::getValue('p', 1)));
 
         //($id_lang, $expr, $page_number = 1, $page_size = 1, $order_by = 'position',
@@ -141,14 +147,33 @@ Class Convermax extends Module
 
         //$srch_cntrl->p, $srch_cntrl->n, $this->orderBy, $this->orderWay
 
-        $search = Search::find($this->context->language->id, $query, $srch_cntrl->p, $srch_cntrl->n, 'position',
-            'desc', false, true, null, $facets);
+        /*
+        foreach ($_GET as $key => $val)
+            if (substr($key, 0, 3) == 'cm_')
+                $facets[str_replace('cm_', '', $key)] = Tools::getValue($key);
+        */
+        $facets = Tools::getValue('cm_select');
+        //if ($facets && is_array($facets)
+            //foreach ($facets as $facet)
+
+        $search = Search::find($this->context->language->id, $query, $srch_cntrl->p, $srch_cntrl->n, $srch_cntrl->orderBy,
+            $srch_cntrl->orderWay, false, true, null, $facets);
 
         Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
         $nbProducts = $search['total'];
         $srch_cntrl->pagination($nbProducts);
 
         $srch_cntrl->addColorsToProductList($search['result']);
+
+        if (stripos($search['cm_result']->State, 'nothing'))
+            $cm_message = 'nothing found';
+        elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
+        {
+            $cm_message = 'your request has been corrected to ' . $search['cm_result']->Corrections[0]->Replace;
+            $original_query = $search['cm_result']->Corrections[0]->Replace;
+        }
+        else
+            $cm_message = false;
 
         $smarty->assign(array(
             'products' => $search['result'], // DEPRECATED (since to 1.4), not use this: conflict with block_cart module
@@ -157,10 +182,12 @@ Class Convermax extends Module
             'search_query' => $original_query,
             'instant_search' => $srch_cntrl->instant_search,
             //'errors' => array('custom error 1', 'custom error 2', 'custom error 3'),
+            'cm_message' => $cm_message,
             'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
 
 
-        $list = $smarty->fetch(_PS_THEME_DIR_.'search.tpl');
+        //$list = $smarty->fetch(_PS_THEME_DIR_.'search.tpl');
+        $list = $smarty->fetch(_PS_MODULE_DIR_.'convermax/search.tpl');;
 
 
         $smarty->assign(array(
@@ -191,5 +218,15 @@ Class Convermax extends Module
 
         return Tools::jsonEncode($vars);
         //return $list;
+    }
+
+    public static function getFacets()
+    {
+        $ret = false;
+        foreach ($_GET as $key => $val)
+            if (substr($key, 0, 3) == 'cm_')
+                $ret[$key] = Tools::getValue($key);
+                //$ret[] = $val;
+        return $ret;
     }
 }

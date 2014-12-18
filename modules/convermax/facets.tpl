@@ -1,7 +1,10 @@
 <script type="text/javascript">
     var cm_query = '{$query}';
-    var cm_page = '{$pagenumber}';
-    var cm_size = '{$pagesize}';
+    cm_params.page = '{$pagenumber}';
+    cm_params.size = '{$pagesize}';
+{if isset($facets_params) && $facets_params}
+{$facets_params}
+{/if}
     //alert(cm_params);
     var current_friendly_url = '#/';
 </script>
@@ -11,4 +14,7 @@
     <div id="facets_block">
         {include file="./facet.tpl"}
     </div>
+</div>
+<div id="cm_ajax_container" style="display: none;">
+    <div class="cm_ajax_loader"><img src="{$img_ps_dir}loader.gif" alt="" /><br />{l s='Loading...' mod='convermax'}</div>
 </div>

@@ -80,8 +80,13 @@ Class ConvermaxAPI
         return true;
     }
 
-    public function search($query, $page_number = 0, $page_size = 10, $facets = false)
+    public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
     {
+        if ($order_by == 'position')
+        {
+            $order_by = false;
+            $order_desc = false;
+        }
         $url = $this->base_url.$this->hash.'/search/json?query='.urlencode($query);
         $url .= '&page=' . $page_number . '&pagesize=' . $page_size;
         /*if ($facets)
@@ -101,7 +106,22 @@ Class ConvermaxAPI
         }*/
         if ($facets)
         {
-            $url .= $facets;
+            //$url .= $facets;
+            $i = 0;
+            foreach ($facets as $key => $val)
+            {
+                $url .= '&' . 'facet.' . $i . '.field=' . urlencode($key);
+                foreach ($val as $v)
+                {
+                    $url .= '&facet.' . $i . '.selection=' . urlencode($v);
+                }
+                $i++;
+            }
+        }
+
+        if ($order_by)
+        {
+            $url .= '&sort.0.fieldname=' . $order_by . ($order_desc ? '&sort.0.descending=true' : '');
         }
         //$header = array('Content-Type: application/json; charset=utf-8');
         $ch = curl_init($url);
@@ -120,6 +140,21 @@ Class ConvermaxAPI
         if (curl_errno($ch))
             return false;
         return json_decode($data);
+    }
+
+    public function autocomplete($query)
+    {
+        $url = $this->base_url.$this->hash.'/autocomplete/json?query='.urlencode($query);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+        $data = curl_exec($ch);
+        if (curl_errno($ch))
+            return false;
+        //return json_decode($data);
+        return $data;
     }
 
 }

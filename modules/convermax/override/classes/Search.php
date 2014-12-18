@@ -90,7 +90,7 @@ Class Search extends SearchCore
 
 
         // Now each non-indexed product is processed one by one, langage by langage
-        $j = 0;
+       /* $j = 0;
         foreach ($products as $product) {
             $products[$j]['_CatalogName'] = 'products';
             if ($products[$j]['features'])
@@ -101,7 +101,7 @@ Class Search extends SearchCore
                     unset($products[$j]['features']);
                     $k++;
                 }
-            }
+            }*/
 
             //unset($products[$j]['attachments']);
             //unset($products[$j]['packItems']);
@@ -112,11 +112,35 @@ Class Search extends SearchCore
                     unset($products[$j][$key]);*/
 
 
-            $j++;
+           /* $j++;
 
             if (!in_array($product['id_product'], $products_array))
                 $products_array[] = (int)$product['id_product'];
+        }*/
+//
+        for ($i = 0; $i < count($products); $i++)
+        {
+            $products[$i]['_CatalogName'] = 'products';
+            if ($products[$i]['features'])
+            {
+                //$k = 0;
+                foreach ($products[$i]['features'] as $feature)
+                {
+                    $products[$i][$feature['name']] = $feature['value'];
+                    //unset($products[$i]['features']);
+                    //$k++;
+                }
+                unset($products[$i]['features']);
+            }
+
+            $img_id = Product::getCover($products[$i]['id_product']);
+            $link = new Link();
+            $products[$i]['img_link'] = 'http://' . $link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], 'small_default');
+
+            if (!in_array($products[$i]['id_product'], $products_array))
+                $products_array[] = (int)$products[$i]['id_product'];
         }
+
         if (!$convermax->batchAdd($products))
             return false;
         //Search::setProductsAsIndexed($products_array);
@@ -131,12 +155,14 @@ Class Search extends SearchCore
     }
 
     public static function find($id_lang, $expr, $page_number = 1, $page_size = 1, $order_by = 'position',
-                                $order_way = 'desc', $ajax = false, $use_cookie = true, Context $context = null, $facets = false)
+                                $order_way = 'desc', $ajax = false, $use_cookie = true, Context $context = null, $facets = null)
     {
 
         if (!$context)
             $context = Context::getContext();
         $db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+        if (!Validate::isOrderBy($order_by) || !Validate::isOrderWay($order_way))
+            return false;
         /*
                 // TODO : smart page management
                 if ($page_number < 1) $page_number = 1;
@@ -225,15 +251,20 @@ Class Search extends SearchCore
 
         //$context->shop->id;
 
+        if ($order_way == 'desc')
+            $order_desc = true;
+        else
+            $order_desc = false;
+
         $convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'), Configuration::get('CONVERMAX_HASH'));
-        $search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets);
+        $search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets, $order_by, $order_desc);
         $product_pool = '';
         //foreach ($eligible_products as $id_product)
         foreach ($search_results->Items as $item)
             //if ($id_product)
             //$product_pool .= (int)$id_product.',';
             $product_pool .= (int)$item->id_product . ',';
-        if ($order_by == 'position')
+        //if ($order_by == 'position')
             $product_order_by = rtrim($product_pool, ',');
 
 
@@ -241,9 +272,13 @@ Class Search extends SearchCore
             return ($ajax ? array() : array('total' => 0, 'result' => array()));
         $product_pool = ((strpos($product_pool, ',') === false) ? (' = '.(int)$product_pool.' ') : (' IN ('.rtrim($product_pool, ',').') '));
 
+        //sort by convermax result
+        $order = 'FIELD(p.`id_product`, '.$product_order_by.')';
+        $order_way = 'asc';
+
         if ($ajax)
         {
-            $sql = 'SELECT DISTINCT p.id_product, pl.name pname, cl.name cname,
+            /*$sql = 'SELECT DISTINCT p.id_product, pl.name pname, cl.name cname,
 						cl.link_rewrite crewrite, pl.link_rewrite prewrite '.$score.'
 					FROM '._DB_PREFIX_.'product p
 					INNER JOIN `'._DB_PREFIX_.'product_lang` pl ON (
@@ -256,8 +291,11 @@ Class Search extends SearchCore
 						AND cl.`id_lang` = '.(int)$id_lang.Shop::addSqlRestrictionOnLang('cl').'
 					)
 					WHERE p.`id_product` '.$product_pool.'
-					ORDER BY position DESC LIMIT 10';
-            return $db->executeS($sql);
+					ORDER BY '.$order.'asc';
+					//ORDER BY position DESC LIMIT 10';
+            return $db->executeS($sql);*/
+            //$autocomplete = $convermax->autocomplete($expr);
+            return $convermax->autocomplete($expr);
         }
 
         if (strpos($order_by, '.') > 0)
@@ -266,16 +304,16 @@ Class Search extends SearchCore
             $order_by = pSQL($order_by[0]).'.`'.pSQL($order_by[1]).'`';
         }
         $alias = '';
-        if ($order_by == 'position')
-        {
+        //if ($order_by == 'position')
+        //{
             //$product_order_by = rtrim($product_pool, ',');
-            $order_by = 'FIELD(p.`id_product`, '.$product_order_by.')';
-            $order_way = 'asc';
-        }
-        if ($order_by == 'price')
+            //$order = 'FIELD(p.`id_product`, '.$product_order_by.')';
+            //$order_way = 'asc';
+        //}
+        /*if ($order_by == 'price')
             $alias = 'product_shop.';
         else if ($order_by == 'date_upd')
-            $alias = 'p.';
+            $alias = 'p.';*/
         $sql = 'SELECT p.*, product_shop.*, stock.out_of_stock, IFNULL(stock.quantity, 0) as quantity,
 				pl.`description_short`, pl.`available_now`, pl.`available_later`, pl.`link_rewrite`, pl.`name`,
 			 MAX(image_shop.`id_image`) id_image, il.`legend`, m.`name` manufacturer_name '.$score.', MAX(product_attribute_shop.`id_product_attribute`) id_product_attribute,
@@ -301,7 +339,7 @@ Class Search extends SearchCore
 				LEFT JOIN `'._DB_PREFIX_.'image_lang` il ON (i.`id_image` = il.`id_image` AND il.`id_lang` = '.(int)$id_lang.')
 				WHERE p.`id_product` '.$product_pool.'
 				GROUP BY product_shop.id_product
-				'.($order_by ? 'ORDER BY  '.$alias.$order_by : '').($order_way ? ' '.$order_way : ''); /*.'
+				'.($order ? 'ORDER BY  '.$order : '');/*.($order_way ? ' '.$order_way : ''); .'
 				LIMIT '.(int)(($page_number - 1) * $page_size).','.(int)$page_size;*/
         $result = $db->executeS($sql);
 
