@@ -19,6 +19,7 @@ class SearchController extends SearchControllerCore
         //$front_controller = get_parent_class(get_parent_class($this));
         //$front_controller::initContent();
         //get_class($this);
+        $facets = Tools::getValue('cm_select');
 
 
 
@@ -32,6 +33,7 @@ class SearchController extends SearchControllerCore
                 $product['product_link'] = $this->context->link->getProductLink($product['id_product'], $product['prewrite'], $product['crewrite']);
             //die(Tools::jsonEncode($searchResults));
             die($searchResults);
+            //die('[{"id_product":"5","pname":"Printed Summer Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-summer-dress","position":"84","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=5&controller=product"},{"id_product":"7","pname":"Printed Chiffon Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-chiffon-dress","position":"42","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=7&controller=product"},{"id_product":"4","pname":"Printed Dress","cname":"Evening Dresses","crewrite":"evening-dresses","prewrite":"printed-dress","position":"42","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=4&controller=product"},{"id_product":"6","pname":"Printed Summer Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-summer-dress","position":"36","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=6&controller=product"},{"id_product":"3","pname":"Printed Dress","cname":"Casual Dresses","crewrite":"casual-dresses","prewrite":"printed-dress","position":"21","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=3&controller=product"}]');
         }
 
         if ($this->instant_search && !is_array($query))
@@ -64,7 +66,8 @@ class SearchController extends SearchControllerCore
                 'instant_search' => $this->instant_search,
                 'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
         }
-        elseif (($query = Tools::getValue('search_query', Tools::getValue('ref'))) && !is_array($query)) {
+        //added facets check. If facets exists do don display empty query message
+        elseif ((($query = Tools::getValue('search_query', Tools::getValue('ref'))) && !is_array($query)) || $facets) {
             $this->productSort();
 
             //$this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
@@ -84,7 +87,7 @@ class SearchController extends SearchControllerCore
                 if (substr($key, 0, 3) == 'cm_')
                     $facets[str_replace('cm_', '', $key)] = Tools::getValue($key);
             */
-            $facets = Tools::getValue('cm_select');
+            //$facets = Tools::getValue('cm_select');
 
             $search = Search::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay, false, true, null, $facets);
             foreach ($search['result'] as &$product)
@@ -114,6 +117,7 @@ class SearchController extends SearchControllerCore
                 'nbProducts' => $search['total'],
                 'search_query' => $original_query,
                 'cm_message' => $cm_message,
+                'related_searches' => $search['cm_result']->SeeAlsoQueries,
                 'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
         }
         elseif (($tag = urldecode(Tools::getValue('tag'))) && !is_array($tag))
@@ -175,6 +179,7 @@ class SearchController extends SearchControllerCore
             'pagenumber' => $this->p,
             'pagesize' => $this->n,
             'facets_params' => isset($facets_params) ? $facets_params : false,
+            'redirect_url' => $search['cm_result']->Actions[0]->RedirectUrl ? $search['cm_result']->Actions[0]->RedirectUrl : false,
             //'nbProducts' => 10994,
         ));
         //parent::initContent();

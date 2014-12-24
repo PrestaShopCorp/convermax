@@ -4,3 +4,4 @@
     </p>
 {/if}
 {include file="$tpl_dir./search.tpl"}
+{include file="./related-searches.tpl"}

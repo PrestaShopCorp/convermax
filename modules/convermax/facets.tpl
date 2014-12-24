@@ -2,9 +2,12 @@
     var cm_query = '{$query}';
     cm_params.page = '{$pagenumber}';
     cm_params.size = '{$pagesize}';
-{if isset($facets_params) && $facets_params}
-{$facets_params}
-{/if}
+    {if isset($redirect_url) && $redirect_url}
+    var redirect_url = '{$redirect_url}';
+    {/if}
+    {if isset($facets_params) && $facets_params}
+    {$facets_params}
+    {/if}
     //alert(cm_params);
     var current_friendly_url = '#/';
 </script>

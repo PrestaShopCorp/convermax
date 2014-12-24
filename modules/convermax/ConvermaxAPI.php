@@ -88,6 +88,7 @@ Class ConvermaxAPI
             $order_desc = false;
         }
         $url = $this->base_url.$this->hash.'/search/json?query='.urlencode($query);
+        //$url = 'http://api.convermax.com/v2dev/4f199abe/'.'search/json?query='.urlencode($query);
         $url .= '&page=' . $page_number . '&pagesize=' . $page_size;
         /*if ($facets)
         {
@@ -131,6 +132,7 @@ Class ConvermaxAPI
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 //curl_setopt($ch, CURLOPT_SSLCERT, @'C:\mydir\WORK\Server\www\asd.pem');
         //curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
         //curl_setopt($ch, CURLOPT_HEADER, 1);

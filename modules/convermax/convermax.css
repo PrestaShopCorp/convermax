@@ -4,3 +4,21 @@
     left: 50%;
     z-index: 9;
 }
+
+.ui-cm_autocomplete {
+    background: none repeat scroll 0 0 #cccccc;
+    z-index: 9999;
+}
+
+.ac_results li {
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.ac_results img {
+    float: left;
+}
+
+.ac_results li:hover, .ac_results li.ac_over {
+    background: #cccccc;
+}

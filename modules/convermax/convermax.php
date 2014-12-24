@@ -64,13 +64,14 @@ Class Convermax extends Module
 
     public function hookHeader($params)
     {
-        if (get_class($this->context->controller) == 'SearchController')
-        {
+        //if (get_class($this->context->controller) == 'SearchController')
+        //{
             $this->context->controller->addJS(($this->_path).'convermax.js');
             $this->context->controller->addCSS(($this->_path).'convermax.css');
-            $url = Configuration::get('CONVERMAX_URL') . Configuration::get('CONVERMAX_HASH') . '/autocomplete/json';
-            Media::addJsDef(array('cm_autocomplete_url' => $url));
-        }
+            //$this->context->controller->addJqueryUI('ui.autocomplete');
+            //$url = Configuration::get('CONVERMAX_URL') . Configuration::get('CONVERMAX_HASH') . '/autocomplete/json';
+            //Media::addJsDef(array('cm_autocomplete_url' => $url));
+        //}
     }
 
     public function hkookTop($params)
@@ -194,7 +195,7 @@ Class Convermax extends Module
             'facets' => $search['cm_result']->Facets,
             'query' => $search['cm_result']->Query,
             'pagenumber' => $srch_cntrl->p,
-            'pagesize' => $srch_cntrl->n
+            'pagesize' => $srch_cntrl->n,
         ));
 
         $facets = $smarty->fetch(_PS_MODULE_DIR_.'convermax/facet.tpl');
@@ -213,7 +214,8 @@ Class Convermax extends Module
             //'filters' => $filter_block['filters'],
             //'nbRenderedProducts' => (int)$nb_products,
             //'nbAskedProducts' => (int)$n
-            'facets' => $facets
+            'facets' => $facets,
+            'redirect_url' => $search['cm_result']->Actions[0]->RedirectUrl ? $search['cm_result']->Actions[0]->RedirectUrl : false
         );
 
         return Tools::jsonEncode($vars);
