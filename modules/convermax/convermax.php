@@ -68,6 +68,7 @@ Class Convermax extends Module
         //{
             $this->context->controller->addJS(($this->_path).'convermax.js');
             $this->context->controller->addCSS(($this->_path).'convermax.css');
+        $this->context->controller->addJQueryUI('ui.slider');
             //$this->context->controller->addJqueryUI('ui.autocomplete');
             //$url = Configuration::get('CONVERMAX_URL') . Configuration::get('CONVERMAX_HASH') . '/autocomplete/json';
             //Media::addJsDef(array('cm_autocomplete_url' => $url));

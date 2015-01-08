@@ -2,6 +2,7 @@
 
 var cm_params = {
     facets: {},
+    sliders: {},
     page: '',//1,//cm_page,
     size: '',//cm_size,
     //sort: '',
@@ -86,7 +87,32 @@ var cm_params = {
             }
 
         }
+        //get sliders
+        keys = Object.keys(this.sliders);
+        for(var i = 0; i < keys.length; i++ ) {
+            //console.log(this.facets[keys[i]]);
+            if (format == 'url') {
+                //data += '&' + encodeURIComponent(keys[i]) + '[]=';
+            }
+            //for(var j = 0; j < this.sliders[keys[i]].length; j++ ) {
+                if (format == 'url') {
+                    //data += '&facet.' + i + '.selection=' + encodeURIComponent(this.facets[keys[i]][j]);
+                    data += /*(i == 0 ? '' : '&') + */'&cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.sliders[keys[i]][0]);
+                }
+                if (format == 'list') {
+                    if (this.sliders[keys[i]][0] != this.sliders[keys[i]][1]) {
+                    data += '<li>' + keys[i] + ' - ' + this.sliders[keys[i]][0] + '<span onclick="cm_params.ResetSlider(\'' + keys[i] + '\', \'' + this.sliders[keys[i]][1] + '\');cm_reload();">[x]</span></li>';
+                    }
+                }
+            //}
+
+        }
+
         return data;
+    },
+    ResetSlider: function(fieldname, value) {
+
+        this.sliders[fieldname][0] = value;
     }
 };
 var ajaxLoaderOn = 0;
@@ -186,6 +212,7 @@ $(document).ready(function()
     });
 
 
+    cm_initSliders();
     cm_paginationButton();
     //cm_init();
     cm_displayCurrentSearchBlock();
@@ -354,21 +381,73 @@ function autocompleterequest(request, response) {
     //cmSettings.globals.autocmpltreqs.push(req);
 };*/
 
+function cm_initSliders() {
+    $('.cm_slider').each(function() {
+        cm_params.sliders[this.dataset.fieldname][1] = this.dataset.range;
+        var r = /\[(.*) TO (.*)\]/i;
+        var v = r.exec(this.dataset.range);
+        var s = r.exec(cm_params.sliders[this.dataset.fieldname][0]);
+        var min = parseFloat(v[1]);
+        var max = parseFloat(v[2]);
+        var selectionmin = parseFloat(s[1]);
+        var selectionmax = parseFloat(s[2]);
+        var sliderinfo = $("<div>").addClass("cm_sliderinfo").html('<p>Selected: ' + selectionmin + ' to ' + selectionmax + '</p>').insertBefore($(this));
+        $(this).slider({
+            range: true,
+            min: min,
+            max: max,
+            values: [selectionmin, selectionmax],
+            slide: function (e, ui) {
+                sliderinfo.html('<p>Selected: ' + ui.values[0] + ' to ' + ui.values[1] + '</p>');
+            },
+            change: function (e, ui) {
+                var newselection = '[' + ui.values[0] + ' TO ' + ui.values[1] +']';
+                cm_params.sliders[this.dataset.fieldname][0] = newselection;
+                cm_params.page = 1;
+                cm_reload();
+            }
+        });
+    });
+
+}
 
 function cm_displayCurrentSearchBlock() {
-    if(!Object.keys(cm_params.facets).length) {
+    /* old working
+    if(!Object.keys(cm_params.facets).length && !Object.keys(cm_params.sliders).length) {
         $('#cm_selected_facets').replaceWith('<div id="cm_selected_facets"> </div>');
     } else {
         var data;
         data = '<b>Current Search</b>';
         data += '<ul>';
         data += cm_params.GetFacets('list');
-        data += '<li><span onclick="cm_params.facets = {};cm_reload();">clear all</span></li>';
+        data += '<li><span onclick="cm_clearCurrentSearchBlock();">clear all</span></li>';
         data += '</ul>';
 
         //return data;
         $('#cm_selected_facets').replaceWith('<div id="cm_selected_facets">' + data + '</div>');
+    }*/
+    var facets = cm_params.GetFacets('list');
+    if (facets) {
+        var data;
+        data = '<b>Current Search</b>';
+        data += '<ul>';
+        data += facets;
+        data += '<li><span onclick="cm_clearCurrentSearchBlock();">clear all</span></li>';
+        data += '</ul>';
+
+        $('#cm_selected_facets').replaceWith('<div id="cm_selected_facets">' + data + '</div>');
+    } else {
+        $('#cm_selected_facets').replaceWith('<div id="cm_selected_facets"> </div>');
     }
+}
+
+function cm_clearCurrentSearchBlock() {
+    cm_params.facets = {};
+    var keys = Object.keys(cm_params.sliders);
+    for(var i = 0; i < keys.length; i++ ) {
+    cm_params.ResetSlider(keys[i], cm_params.sliders[keys[i]][1]);
+    }
+    cm_reload();
 }
 
 
@@ -458,6 +537,7 @@ function cm_reload(params) {
 
 
                 cm_paginationButton();
+                cm_initSliders();
                 initUniform();
                 ajaxLoaderOn = 0;
 

@@ -82,7 +82,7 @@ Class Search extends SearchCore
         $products = $product -> getProducts($id_lang, 0, 0, 'id_product', 'ASC', false, true);
         $products = Product::getProductsProperties((int)$id_lang, $products);
 
-        $products1 = parent::indexation(true);
+        //$products1 = parent::indexation(true);
 
         // Products are processed 50 by 50 in order to avoid overloading MySQL
         /*while (($products = Search::getProductsToIndex($total_languages, $id_product, 50, $weight_array)) && (count($products) > 0)) {

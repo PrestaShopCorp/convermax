@@ -163,12 +163,30 @@ class SearchController extends SearchControllerCore
                     $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = \'' . $f_value->Value . "'\r\n";
                 }
             }*/
-            for ($i = 0; $i < count($facet->Values); $i++)
+
+            //get slider selection from url
+            if ($facet->IsRanged)
             {
-                if ($facet->Values[$i]->Selected == true)
+                //$facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
+                //$facets_params .= 'cm_params.facets.' . $facet->FieldName . '[0]' . ' = \'' . $facet->Values[0]->Term . "';\r\n";
+                if ($facets[$facet->FieldName])
                 {
-                    $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
-                    $facets_params .= 'cm_params.facets.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Value . "';\r\n";
+                    $facets_params .= 'cm_params.sliders.' . $facet->FieldName . ' = []' . ";\r\n";
+                    $facets_params .= 'cm_params.sliders.' . $facet->FieldName . '[0]' . ' = \'' . $facets[$facet->FieldName][0] . "';\r\n";
+                }
+                else
+                {
+                    $facets_params .= 'cm_params.sliders.' . $facet->FieldName . ' = []' . ";\r\n";
+                    $facets_params .= 'cm_params.sliders.' . $facet->FieldName . '[0]' . ' = \'' . $facet->Values[0]->Term . "';\r\n";
+                }
+            }
+            else
+            {
+                for ($i = 0; $i < count($facet->Values); $i++) {
+                    if ($facet->Values[$i]->Selected == true) {
+                        $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
+                        $facets_params .= 'cm_params.facets.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Term . "';\r\n";
+                    }
                 }
             }
         }
