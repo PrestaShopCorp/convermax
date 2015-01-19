@@ -1,3 +1,6 @@
+.cm_tree_item {
+    display: block;
+}
 .cm_ajax_loader {
     position: fixed;
     top: 50%;

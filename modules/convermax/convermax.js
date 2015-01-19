@@ -3,6 +3,8 @@
 var cm_params = {
     facets: {},
     sliders: {},
+    trees: {},
+    facets_display: {},
     page: '',//1,//cm_page,
     size: '',//cm_size,
     //sort: '',
@@ -10,7 +12,7 @@ var cm_params = {
     orderby: 'position',
     orderway: 'desc',
     //query: cm_query,
-    SetFacet: function(checked, fieldname, value) {
+    SetFacet: function(checked, fieldname, value, displayname) {
         //value = value.split('|');
         //key = value[0];
         if(checked) {
@@ -21,6 +23,7 @@ var cm_params = {
                 this.facets[fieldname] = [];
             }
             this.facets[fieldname].push(value);
+            this.facets_display[fieldname] = displayname;
             //this.facets[].({key: value[0], val: value[1]});
         } else {
             //working code:
@@ -38,6 +41,7 @@ var cm_params = {
             if (this.facets[fieldname].length == 0) {
                 //this.facets.splice(this.facets.indexOf(fieldname), 1);
                 delete this.facets[fieldname];
+                delete this.facets_display[fieldname];
             }
         }
     },
@@ -77,12 +81,15 @@ var cm_params = {
                 //data += '&' + encodeURIComponent(keys[i]) + '[]=';
             }
             for(var j = 0; j < this.facets[keys[i]].length; j++ ) {
-                if (format == 'url') {
-                    //data += '&facet.' + i + '.selection=' + encodeURIComponent(this.facets[keys[i]][j]);
-                    data += (i == 0 ? '' : '&') + 'cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.facets[keys[i]][j]);
-                }
-                if (format == 'list') {
-                    data += '<li>' + keys[i] + ' - ' + this.facets[keys[i]][j] + '<span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j] + '\');cm_reload();">[x]</span></li>';
+                if (j in this.facets[keys[i]]) {
+                    if (format == 'url') {
+                        //data += '&facet.' + i + '.selection=' + encodeURIComponent(this.facets[keys[i]][j]);
+                        data += (i == 0 ? '' : '&') + 'cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.facets[keys[i]][j]) + (j == (this.facets[keys[i]].length - 1) ? '' : '&');
+                    }
+                    if (format == 'list') {
+                        //data += '<li>' + keys[i] + ' - ' + this.facets[keys[i]][j] + '<span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j] + '\');cm_reload();">[x]</span></li>';
+                        data += '<li>' + this.facets_display[keys[i]] + ' - ' + this.facets[keys[i]][j] + '<span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j] + '\');cm_reload();">[x]</span></li>';
+                    }
                 }
             }
 
@@ -138,11 +145,13 @@ $(document).ready(function()
         //reloadContent();
         //console.log(cm_params.facets);
 
-        cm_params.SetFacet(this.checked, this.dataset.fieldname, this.value);
+        cm_params.SetFacet(this.checked, this.dataset.fieldname, this.value, this.dataset.displayname);
         //console.log(cm_params.facets);
         cm_params.page = 1;
         cm_reload();
     });
+
+
     /*if (window.location.href.split('#').length == 2 && window.location.href.split('#')[1] != '')
     {
         var params = window.location.href.split('#')[1];
@@ -166,7 +175,8 @@ $(document).ready(function()
         cm_reload();
     });
 
-    $('#cm_related a').click(function(e) {
+    $('#cm_related a').click(function(e)
+    {
         e.preventDefault();
         cm_params.page = 1;
         cm_query = $(this).text();
@@ -213,6 +223,7 @@ $(document).ready(function()
 
 
     cm_initSliders();
+    cm_initTrees();
     cm_paginationButton();
     //cm_init();
     cm_displayCurrentSearchBlock();
@@ -411,6 +422,20 @@ function cm_initSliders() {
 
 }
 
+function cm_initTrees()
+{
+    $('.cm_tree_item').click(function(e)
+    {
+        e.preventDefault();
+        cm_params.page = 1;
+        cm_params.SetFacet(true, this.dataset.fieldname, this.dataset.value, this.dataset.displayname);
+        //cm_query = $(this).text();
+        //cm_reload({page: p});
+        //alert(cm_query);
+        cm_reload();
+    });
+}
+
 function cm_displayCurrentSearchBlock() {
     /* old working
     if(!Object.keys(cm_params.facets).length && !Object.keys(cm_params.sliders).length) {
@@ -431,8 +456,10 @@ function cm_displayCurrentSearchBlock() {
         var data;
         data = '<b>Current Search</b>';
         data += '<ul>';
+        if (cm_query.length > 0)
+            data += '<li>Query - ' + cm_query + '<span onclick="cm_clearQuery()">[x]</span></li>';
         data += facets;
-        data += '<li><span onclick="cm_clearCurrentSearchBlock();">clear all</span></li>';
+        data += '<li><span onclick="cm_clearCurrentSearchBlock()">clear all</span></li>';
         data += '</ul>';
 
         $('#cm_selected_facets').replaceWith('<div id="cm_selected_facets">' + data + '</div>');
@@ -447,6 +474,13 @@ function cm_clearCurrentSearchBlock() {
     for(var i = 0; i < keys.length; i++ ) {
     cm_params.ResetSlider(keys[i], cm_params.sliders[keys[i]][1]);
     }
+    cm_reload();
+}
+
+function cm_clearQuery()
+{
+    cm_query='';
+    $('#search_query_top').val('');
     cm_reload();
 }
 
@@ -538,6 +572,7 @@ function cm_reload(params) {
 
                 cm_paginationButton();
                 cm_initSliders();
+                cm_initTrees();
                 initUniform();
                 ajaxLoaderOn = 0;
 

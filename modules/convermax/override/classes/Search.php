@@ -139,6 +139,23 @@ Class Search extends SearchCore
             $link = new Link();
             $products[$i]['img_link'] = 'http://' . $link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], 'small_default');
 
+            //Product::getProductCategoriesFull(5);
+            $cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
+            $full_category = '';
+            $j = 0;
+            foreach ($cat_full as $cat)
+            {
+                if ($j > 0)
+                    $full_category .= $cat['name'] . ($j == (count($cat_full) - 1) ? '' : '>');
+                $j++;
+            }
+
+            /*for ($j = 0; $j < count($cat_full); $j++)
+                if ($j > 0)
+                    $full_category .= $cat_full[$j]['name'] . ($j == (count($cat_full) - 1) ? '>' : '');*/
+
+            $products[$i]['category_full'] = $full_category;
+
             if (!in_array($products[$i]['id_product'], $products_array))
                 $products_array[] = (int)$products[$i]['id_product'];
         }
@@ -318,7 +335,7 @@ Class Search extends SearchCore
             $alias = 'p.';*/
         $sql = 'SELECT p.*, product_shop.*, stock.out_of_stock, IFNULL(stock.quantity, 0) as quantity,
 				pl.`description_short`, pl.`available_now`, pl.`available_later`, pl.`link_rewrite`, pl.`name`,
-			 MAX(image_shop.`id_image`) id_image, il.`legend`, m.`name` manufacturer_name '.$score.', MAX(product_attribute_shop.`id_product_attribute`) id_product_attribute,
+			 MAX(image_shop.`id_image`) id_image, il.`legend`, m.`name` manufacturer_name '/*.$score*/.', MAX(product_attribute_shop.`id_product_attribute`) id_product_attribute,
 				DATEDIFF(
 					p.`date_add`,
 					DATE_SUB(

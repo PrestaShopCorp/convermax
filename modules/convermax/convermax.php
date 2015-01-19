@@ -216,7 +216,7 @@ Class Convermax extends Module
             //'nbRenderedProducts' => (int)$nb_products,
             //'nbAskedProducts' => (int)$n
             'facets' => $facets,
-            'redirect_url' => $search['cm_result']->Actions[0]->RedirectUrl ? $search['cm_result']->Actions[0]->RedirectUrl : false
+            'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false
         );
 
         return Tools::jsonEncode($vars);

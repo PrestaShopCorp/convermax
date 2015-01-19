@@ -140,7 +140,8 @@ Class ConvermaxAPI
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         $data = curl_exec($ch);
         if (curl_errno($ch))
-            return false;
+            die('convermax connection error');
+            //return false;
         return json_decode($data);
     }
 

@@ -154,6 +154,7 @@ class SearchController extends SearchControllerCore
         //$search['facets'];
 
         //$facets = print_r($search['facets'], 1);
+        $facets_params = '';
         foreach ($search['cm_result']->Facets as $facet)
         {
             /*foreach ($facet->Values as $f_value)
@@ -186,6 +187,7 @@ class SearchController extends SearchControllerCore
                     if ($facet->Values[$i]->Selected == true) {
                         $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
                         $facets_params .= 'cm_params.facets.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Term . "';\r\n";
+                        $facets_params .= 'cm_params.facets_display.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Value . "';\r\n";
                     }
                 }
             }
@@ -197,7 +199,7 @@ class SearchController extends SearchControllerCore
             'pagenumber' => $this->p,
             'pagesize' => $this->n,
             'facets_params' => isset($facets_params) ? $facets_params : false,
-            'redirect_url' => $search['cm_result']->Actions[0]->RedirectUrl ? $search['cm_result']->Actions[0]->RedirectUrl : false,
+            'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false,
             //'nbProducts' => 10994,
         ));
         //parent::initContent();
