@@ -5,24 +5,7 @@ class SearchController extends SearchControllerCore
 {
     public function initContent()
     {
-        //parent::initContent();
-
-
-
-        global $smarty;
-        /*$convermaxInstance = Module::getInstanceByName('convermax');
-        $convermaxInstance->context->smarty->assign(array(
-            'myvar' => 'searchController',
-        ));*/
-
-       // parent::initContent();
-        //$front_controller = get_parent_class(get_parent_class($this));
-        //$front_controller::initContent();
-        //get_class($this);
         $facets = Tools::getValue('cm_select');
-
-
-
 
         $query = Tools::replaceAccentedChars(urldecode(Tools::getValue('q')));
         $original_query = Tools::getValue('q');
@@ -31,9 +14,7 @@ class SearchController extends SearchControllerCore
             $searchResults = Search::find((int)(Tools::getValue('id_lang')), $query, 1, 10, 'position', 'desc', true);
             foreach ($searchResults as &$product)
                 $product['product_link'] = $this->context->link->getProductLink($product['id_product'], $product['prewrite'], $product['crewrite']);
-            //die(Tools::jsonEncode($searchResults));
             die($searchResults);
-            //die('[{"id_product":"5","pname":"Printed Summer Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-summer-dress","position":"84","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=5&controller=product"},{"id_product":"7","pname":"Printed Chiffon Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-chiffon-dress","position":"42","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=7&controller=product"},{"id_product":"4","pname":"Printed Dress","cname":"Evening Dresses","crewrite":"evening-dresses","prewrite":"printed-dress","position":"42","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=4&controller=product"},{"id_product":"6","pname":"Printed Summer Dress","cname":"Summer Dresses","crewrite":"summer-dresses","prewrite":"printed-summer-dress","position":"36","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=6&controller=product"},{"id_product":"3","pname":"Printed Dress","cname":"Casual Dresses","crewrite":"casual-dresses","prewrite":"printed-dress","position":"21","product_link":"http:\/\/prestashop-tmp\/index.php?id_product=3&controller=product"}]');
         }
 
         if ($this->instant_search && !is_array($query))
@@ -42,15 +23,6 @@ class SearchController extends SearchControllerCore
             $this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
             $this->p = abs((int)(Tools::getValue('p', 1)));
             $search = Search::find($this->context->language->id, $query, 1, 10, 'position', 'desc');
-
-/*
-            $convermaxInstance = Module::getInstanceByName('convermax');
-            $convermaxInstance->context->smarty->assign(array(
-                'myvar' => 'searchController',
-            ));
-*/
-
-
 
             Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
             $nbProducts = $search['total'];
@@ -70,29 +42,16 @@ class SearchController extends SearchControllerCore
         elseif ((($query = Tools::getValue('search_query', Tools::getValue('ref'))) && !is_array($query)) || $facets) {
             $this->productSort();
 
-            //$this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
-            //$this->p = abs((int)(Tools::getValue('p', 1)));
-
-            //$this->n = abs((int)(Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE'))));
-
             $this->n = abs((int)(Tools::getValue('n', (isset($this->context->cookie->nb_item_per_page) ? (int)$this->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE')))));
 
             $this->p = abs((int)(Tools::getValue('p', 1)));
 
-
             $original_query = $query;
             $query = Tools::replaceAccentedChars(urldecode($query));
-
-            /*foreach ($_GET as $key => $val)
-                if (substr($key, 0, 3) == 'cm_')
-                    $facets[str_replace('cm_', '', $key)] = Tools::getValue($key);
-            */
-            //$facets = Tools::getValue('cm_select');
 
             $search = Search::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay, false, true, null, $facets);
             foreach ($search['result'] as &$product)
                 $product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&') . 'search_query=' . urlencode($query) . '&results=' . (int)$search['total'];
-
 
             Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
             $nbProducts = $search['total'];
@@ -146,30 +105,12 @@ class SearchController extends SearchControllerCore
         }
         $this->context->smarty->assign(array('add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'), 'comparator_max_item' => Configuration::get('PS_COMPARATOR_MAX_ITEM')));
 
-        //$this->setTemplate(_PS_THEME_DIR_.'search.tpl');
-        //$this->setTemplate(_PS_MODULE_DIR_.'convermax/searchm.tpl');
-
-
-
-        //$search['facets'];
-
-        //$facets = print_r($search['facets'], 1);
         $facets_params = '';
         foreach ($search['cm_result']->Facets as $facet)
         {
-            /*foreach ($facet->Values as $f_value)
-            {
-                if ($f_value->Selected == true)
-                {
-                    $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = \'' . $f_value->Value . "'\r\n";
-                }
-            }*/
-
             //get slider selection from url
             if ($facet->IsRanged)
             {
-                //$facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
-                //$facets_params .= 'cm_params.facets.' . $facet->FieldName . '[0]' . ' = \'' . $facet->Values[0]->Term . "';\r\n";
                 if ($facets[$facet->FieldName])
                 {
                     $facets_params .= 'cm_params.sliders.' . $facet->FieldName . ' = []' . ";\r\n";
@@ -183,8 +124,10 @@ class SearchController extends SearchControllerCore
             }
             else
             {
-                for ($i = 0; $i < count($facet->Values); $i++) {
-                    if ($facet->Values[$i]->Selected == true) {
+                for ($i = 0; $i < count($facet->Values); $i++)
+                {
+                    if ($facet->Values[$i]->Selected == true)
+                    {
                         $facets_params .= 'cm_params.facets.' . $facet->FieldName . ' = []' . ";\r\n";
                         $facets_params .= 'cm_params.facets.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Term . "';\r\n";
                         $facets_params .= 'cm_params.facets_display.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Value . "';\r\n";
@@ -193,16 +136,14 @@ class SearchController extends SearchControllerCore
             }
         }
 
-        $smarty->assign(array(
+        $this->context->smarty->assign(array(
             'facets' => $search['cm_result']->Facets,
             'query' => $search['cm_result']->Query,
             'pagenumber' => $this->p,
             'pagesize' => $this->n,
             'facets_params' => isset($facets_params) ? $facets_params : false,
             'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false,
-            //'nbProducts' => 10994,
         ));
-        //parent::initContent();
         $this->setTemplate(_PS_MODULE_DIR_.'convermax/search.tpl');
         $front_controller = get_parent_class(get_parent_class($this));
         $front_controller::initContent();

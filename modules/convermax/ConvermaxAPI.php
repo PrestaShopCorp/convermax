@@ -1,38 +1,28 @@
 <?php
 
-Class ConvermaxAPI
+class ConvermaxAPI
 {
 
-    //private static $cert = _PS_MODULE_DIR_.'convermax/prestashop_key+cert.pem';
-    //private static $cert = '/home/demo/prestashop/www/modules/convermax/prestashop_key+cert.pem';
-    //private static $base_url = 'https://api.convermax.com/v2test/4f199abe/';
-
-    private $base_url;
-    private $hash;
+    private $url;
     private $cert;
 
-    public function  __construct($base_url, $hash, $cert = '')
+    public function  __construct($url, $cert = '')
     {
-        $this->base_url = $base_url;
-        $this->hash = $hash;
+        if (stristr(substr($url, -1), '/'))
+            $url = substr($url, 0, -1);
+        $this->url = $url;
+        //$this->url = 'https://api.convermax.com/v2dev/4f199abe';
         $this->cert = $cert;
     }
 
     public function batchStart()
     {
-        //$header = array('Content-Type: application/json; charset=utf-8');
-        $url = $this->base_url.$this->hash.'/batchupdate/start?incremental=false';
+        $url = $this->url.'/batchupdate/start?incremental=false';
         $ch = curl_init($url);
-//$ch = curl_init('http://120.0.0.1/v2dev/fabbdc26/update/add');
-        //curl_setopt($ch, CURLOPT_POST, 1);
-        //curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-//curl_setopt($ch, CURLOPT_SSLCERT, @'C:\mydir\WORK\Server\www\asd.pem');
         curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
-        //curl_setopt($ch, CURLOPT_HEADER, 1);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         $data = curl_exec($ch);
         if (curl_errno($ch))
             return false;
@@ -41,18 +31,12 @@ Class ConvermaxAPI
 
     public function batchEnd()
     {
-        $url = $this->base_url.$this->hash.'/batchupdate/end';
+        $url = $this->url.'/batchupdate/end';
         $ch = curl_init($url);
-//$ch = curl_init('http://120.0.0.1/v2dev/fabbdc26/update/add');
-        //curl_setopt($ch, CURLOPT_POST, 1);
-        //curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-//curl_setopt($ch, CURLOPT_SSLCERT, @'C:\mydir\WORK\Server\www\asd.pem');
         curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
-        //curl_setopt($ch, CURLOPT_HEADER, 1);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         $data = curl_exec($ch);
         if (curl_errno($ch))
             return false;
@@ -61,16 +45,13 @@ Class ConvermaxAPI
 
     public function batchAdd($items)
     {
-        $url = $this->base_url.$this->hash.'/batchupdate/add';
-        //$header = array('Content-Type: application/json; charset=utf-8');
+        $url = $this->url.'/batchupdate/add';
         $ch = curl_init($url);
-//$ch = curl_init('http://120.0.0.1/v2dev/fabbdc26/update/add');
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-//curl_setopt($ch, CURLOPT_SSLCERT, @'C:\mydir\WORK\Server\www\asd.pem');
         curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
@@ -87,8 +68,7 @@ Class ConvermaxAPI
             $order_by = false;
             $order_desc = false;
         }
-        $url = $this->base_url.$this->hash.'/search/json?query='.urlencode($query);
-        //$url = 'http://api.convermax.com/v2dev/4f199abe/'.'search/json?query='.urlencode($query);
+        $url = $this->url.'/search/json?query='.urlencode($query);
         $url .= '&page=' . $page_number . '&pagesize=' . $page_size;
         /*if ($facets)
         {
@@ -107,7 +87,6 @@ Class ConvermaxAPI
         }*/
         if ($facets)
         {
-            //$url .= $facets;
             $i = 0;
             foreach ($facets as $key => $val)
             {
@@ -124,30 +103,21 @@ Class ConvermaxAPI
         {
             $url .= '&sort.0.fieldname=' . $order_by . ($order_desc ? '&sort.0.descending=true' : '');
         }
-        //$header = array('Content-Type: application/json; charset=utf-8');
         $ch = curl_init($url);
-//$ch = curl_init('http://120.0.0.1/v2dev/fabbdc26/update/add');
-        //curl_setopt($ch, CURLOPT_POST, 1);
-        //curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-//curl_setopt($ch, CURLOPT_SSLCERT, @'C:\mydir\WORK\Server\www\asd.pem');
-        //curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
-        //curl_setopt($ch, CURLOPT_HEADER, 1);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept-Encoding: gzip, deflate'));
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         $data = curl_exec($ch);
         if (curl_errno($ch))
             die('convermax connection error');
-            //return false;
         return json_decode($data);
     }
 
     public function autocomplete($query)
     {
-        $url = $this->base_url.$this->hash.'/autocomplete/json?query='.urlencode($query);
+        $url = $this->url.'/autocomplete/json?query='.urlencode($query);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -156,7 +126,6 @@ Class ConvermaxAPI
         $data = curl_exec($ch);
         if (curl_errno($ch))
             return false;
-        //return json_decode($data);
         return $data;
     }
 
