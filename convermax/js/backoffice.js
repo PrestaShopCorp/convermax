@@ -1,5 +1,4 @@
-<?php
-/**
+/*
  * 2015 CONVERMAX CORP
  *
  * NOTICE OF LICENSE
@@ -18,15 +17,31 @@
  * versions in the future. If you wish to customize PrestaShop for your
  * needs please refer to http://www.prestashop.com for more information.
  *
- *  @author    CONVERMAX CORP <info@convermax.com>
- *  @copyright 2015 CONVERMAX CORP
- *  @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *  @author CONVERMAX CORP <info@convermax.com>
+ *  @copyright  2015 CONVERMAX CORP
+ *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of CONVERMAX CORP
  */
+$(document).ready(function() {
 
-include(dirname(__FILE__).'/../../config/config.inc.php');
-include(dirname(__FILE__).'/../../init.php');
-include(dirname(__FILE__).'/convermax.php');
+    /* This is basic - uses default settings */
 
-$convermax = new Convermax();
-echo $convermax->ajaxCall();
+    $("a.gallery").fancybox();
+
+    /* Using custom settings */
+
+    $("a#inline").fancybox({
+        'hideOnContentClick': true
+    });
+
+    /* Apply fancybox to multiple items */
+
+    $("a.grouqp").fancybox({
+        'transitionIn'	:	'elastic',
+        'transitionOut'	:	'elastic',
+        'speedIn'		:	600,
+        'speedOut'		:	200,
+        'overlayShow'	:	false
+    });
+
+});

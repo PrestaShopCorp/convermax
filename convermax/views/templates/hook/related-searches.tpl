@@ -1,5 +1,4 @@
-<?php
-/*
+{*
 * 2015 CONVERMAX CORP
 *
 * NOTICE OF LICENSE
@@ -22,13 +21,12 @@
 *  @copyright  2015 CONVERMAX CORP
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of CONVERMAX CORP
-*/
-header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-header("Last-Modified: ".gmdate("D, d M Y H:i:s")." GMT");
-						
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-						
-header("Location: ../");
-exit;
+*}
+{if isset($related_searches) && $related_searches}
+    <div id="cm_related">
+        <strong>{l s='Related searches:' mod='convermax'}</strong>
+        {foreach from=$related_searches item=query}
+            <a href="#">{$query|escape:'html'}</a>,
+        {/foreach}
+    </div>
+{/if}

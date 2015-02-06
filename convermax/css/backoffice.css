@@ -14,14 +14,15 @@
 .featuresblock {padding:20px 0; font-size:14px; max-width:1000px;}
 .featuresblock .lcol { float:left; width:40%;}
 .featuresblock .rcol { float:right; padding:30px 0 0 0;}
-.featuresblock li {font-size:16px; line-height:26px;}
+.featuresblock ul { margin-left:0; padding-left:15px;}
+.featuresblock li {font-size:16px; line-height:26px; background:url(../img/m1.png) no-repeat left 6px; list-style:none; padding:0 0 0 25px;}
 
 .cm-config-wrapper h1, .cm-config-wrapper h2, .cm-config-wrapper h3 {color: #4d218b;}
 .cm-config-wrapper h1 { padding:10px 0px 20px 0px; margin:0; line-height:1; font-size:24px;}
 .cm-config-wrapper h3 { padding:0 0 20px 0; margin:0; text-align:center;}
 
 .featuresblock .rcol .connectionform { background:#e7e7e7; padding:20px; }
-.nobootstrap .connectionform label { width:40px; padding:0 10px 0 0; text-shadow:none; color:#00032b; font-weight:normal; text-align:left;}
+.nobootstrap .connectionform label { /*width:40px;*/ padding:0 10px 0 0; text-shadow:none; color:#00032b; font-weight:normal; text-align:left;}
 .nobootstrap .connectionform input { font-size:13px; text-align:left; width:95%; font-family: "Open Sans",Helvetica,Arial,sans-serif;}
 .nobootstrap .connectionform div { padding:0 0 10px 0;}
 .nobootstrap .connectionform input[type=submit] {background-color: white;  box-shadow: 0 0 0 2px #84a520 inset;  color: #84a520;
@@ -33,3 +34,7 @@
 .header { border-bottom:1px solid #cccccc; padding:0px 0 15px 0;}
 .header img { /*float:left; margin:0 250px 0 0;*/}
 .header:after {   content: " ";    visibility: hidden;   display: block;   height: 0;   clear: both;}
+
+.gallery_block a.gallery { display:block; width:260px; float:left; margin:0 20px 0 0; text-align:center; font-size:16px; font-weight:bold; color: #555555; text-decoration:none;}
+.gallery_block a.gallery:hover { opacity:0.8;}
+.gallery_block a.gallery img { border:1px solid #cccccc; margin:0 0 10px 0;}

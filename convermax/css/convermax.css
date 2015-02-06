@@ -74,7 +74,9 @@
 
 .clear-all { font-weight:bold; cursor:pointer;}
 
-.cm_sliderinfo { padding:0 0 0 20px;}
-
 .cm_facet label { color:#777777;}
-.cm_facets .block .list-block li {padding: 2px 0 3px 20px; border-top:none;}
+.block .list-block #facets_block li {padding: 0px 0 0px 20px; border-top:none;}
+.block .list-block #facets_block li input { vertical-align:middle;}
+.block .list-block #facets_block li div.checker span { top:0;}
+
+.slider_pad { padding:0 20px;}
