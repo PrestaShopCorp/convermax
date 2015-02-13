@@ -33,7 +33,7 @@ class Convermax extends Module
 	{
 		$this->name = 'convermax';
 		$this->tab = 'search_filter';
-		$this->version = '0.1';
+		$this->version = '1.0.0';
 		$this->author = 'Author';
 
 		parent::__construct();
@@ -110,15 +110,15 @@ class Convermax extends Module
 	public function hookHeader($params)
 	{
 		unset($params);
-		$this->context->controller->addJS($this->_path.'/js/convermax.js');
-		$this->context->controller->addCSS($this->_path.'/css/convermax.css');
+		$this->context->controller->addJS($this->_path.'/views/js/convermax.js');
+		$this->context->controller->addCSS($this->_path.'/views/css/convermax.css');
 		$this->context->controller->addJQueryUI('ui.slider');
 	}
 
 	public function hookBackOfficeHeader()
 	{
-		$this->context->controller->addCSS($this->_path.'/css/backoffice.css');
-		$this->context->controller->addJS($this->_path.'/js/backoffice.js');
+		$this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
+		$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
 		//$this->context->controller->addJqueryPlugin('fancybox');
 	}
 

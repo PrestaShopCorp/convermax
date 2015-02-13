@@ -127,6 +127,9 @@ class Search extends SearchCore
 	public static function find($id_lang, $expr, $page_number = 1, $page_size = 1, $order_by = 'position',
 								$order_way = 'desc', $ajax = false, $use_cookie = true, Context $context = null, $facets = null)
 	{
+		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		if ($ajax)
+			return $convermax->autocomplete($expr);
 		unset($use_cookie);
 		if (!$context)
 			$context = Context::getContext();
@@ -139,7 +142,7 @@ class Search extends SearchCore
 		else
 			$order_desc = false;
 
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		//$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
 		$search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets, $order_by, $order_desc);
 		$product_pool = '';
 		$items = 'Items';
@@ -155,8 +158,8 @@ class Search extends SearchCore
 		$order = 'FIELD(p.`id_product`, '.$product_order_by.')';
 		$order_way = 'asc';
 
-		if ($ajax)
-			return $convermax->autocomplete($expr);
+		/*if ($ajax)
+			return $convermax->autocomplete($expr);*/
 
 		if (strpos($order_by, '.') > 0)
 		{

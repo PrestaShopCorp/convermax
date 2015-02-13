@@ -35,7 +35,6 @@ class ConvermaxAPI
 		if (stristr(Tools::substr($url, -1), '/'))
 			$url = Tools::substr($url, 0, -1);
 		$this->url = $url;
-		//$this->url = 'https://api.convermax.com/v2dev/4f199abe';
 		$this->cert = $cert;
 	}
 
@@ -131,7 +130,7 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
 		if (curl_errno($ch))
 			die('convermax connection error');
@@ -145,7 +144,7 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
 		if (curl_errno($ch))
 			return false;

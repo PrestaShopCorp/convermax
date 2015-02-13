@@ -28,20 +28,22 @@
   <div class="cm-config-wrapper">
     <div class="cm-config-content">
       <div class="header">
-          <img src="{$module_dir|escape:'html'}/img/logo.png" alt="Convermax">
+          <img src="{$module_dir|escape:'html'}/views/img/logo.png" alt="Convermax">
           
       </div>
       <div class="videoblock">
-        <iframe width="500" height="315" src="https://www.youtube.com/embed/Sme5uRzhCdM" frameborder="0" allowfullscreen=""></iframe>
+        {*<iframe width="500" height="315" src="https://www.youtube.com/embed/Sme5uRzhCdM" frameborder="0" allowfullscreen=""></iframe>*}
+        <div id="player"></div>
         <h1>  {l s='Advanced Site Search' mod='convermax'}</h1>
         <p>{l s='83%% of online shoppers turn to site search to find what they want. Offer an advanced site search experience, so poor results don’t cause shoppers to abandon your online store.' mod='convermax'}</p>
         <p>{l s='Affordable whether you have 100 SKUs or millions.' mod='convermax'}</p>
         <p>{l s='We help walk you through the process to get up and running with our module.' mod='convermax'}</p>
       </div>
       <div class="freeblock">
-        <input type="button" value="Get Your 30 Day Free Trial">
-{l s='Receive a' mod='convermax'} <span>25% {l s='discount off' mod='convermax'}</span> {l s='setup & integration fees.' mod='convermax'}
-        <div class="start">{l s='Start now with a' mod='convermax'} <span>30 {l s='day free' mod='convermax'}</span> {l s='trial' mod='convermax'}!</div>
+		<div class="start"><span class="starleft"></span>Limited Time Offer<span class="starright"></span></div>
+		We'll waive the setup fees for new Convermax users on Prestashop — that's a $500+ value!<br>
+		And to make the offer even sweeter, you'll get the first two month of service at no charge.
+        <input type="button" id="startbutton" value="I want this offer. Let's get started!">
       </div>
       <div class="featuresblock">
         <div class="lcol">
@@ -52,11 +54,11 @@
               <li>{l s='Refinement panel' mod='convermax'}</li>
               <li>{l s='Configurable search relevance' mod='convermax'}</li>
               <li>{l s='Advanced faceted panel' mod='convermax'}</li>
-              <li>{l s='Search-based merchandising options' mod='convermax'}</li>
+			  <li>{l s='Shopper display control' mod='convermax'}</li>
+			  <li>{l s='Search-based merchandising options' mod='convermax'}</li>
               <li>{l s='Search reporting & dashboard' mod='convermax'}</li>
-              <li>{l s='Natively integrates with PrestaShop' mod='convermax'}</li>
+              <li>{l s='Native PrestaShop integration' mod='convermax'}</li>
               <li>{l s='Fast & easy installation' mod='convermax'}</li>
-              <li>{l s='Shopper display control' mod='convermax'}</li>
           </ul>
         </div>
         <div class="rcol">
@@ -81,18 +83,18 @@
       </div>
       
       <div class="gallery_block">
-        <h2>{l s='Screenshots' mod='convermax'}</h2>
-        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/img/scr1.jpg">
-          <img src="{$module_dir|escape:'html'}/img/feature1.jpg" alt=""/>
+        <h2>{l s='Convermax Works with Prestashop!' mod='convermax'}</h2>
+        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/views/img/scr1.jpg">
+          <img src="{$module_dir|escape:'html'}/views/img/feature1.jpg" alt="Automatic spelling corrections" title="Automatic spelling corrections"/>
         </a>
-        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/img/scr2.jpg">
-          <img src="{$module_dir|escape:'html'}/img/feature2.jpg" alt=""/>
+        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/views/img/scr2.jpg">
+          <img src="{$module_dir|escape:'html'}/views/img/feature2.jpg" alt="Rich auto-complete" title="Rich auto-complete"/>
         </a>
-        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/img/scr3.jpg">
-          <img src="{$module_dir|escape:'html'}/img/feature3.jpg" alt=""/>
+        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/views/img/scr3.jpg">
+          <img src="{$module_dir|escape:'html'}/views/img/feature3.jpg" alt="Refinement panel" title="Refinement panel"/>
         </a>
-        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/img/scr4.jpg">
-          <img src="{$module_dir|escape:'html'}/img/feature4.jpg" alt=""/>
+        <a class="gallery" rel="features" href="{$module_dir|escape:'html'}/views/img/scr4.jpg">
+          <img src="{$module_dir|escape:'html'}/views/img/feature4.jpg" alt="Dashboard & reporting" title="Dashboard & reporting"/>
         </a>
         <div class="clear"></div>
       </div>

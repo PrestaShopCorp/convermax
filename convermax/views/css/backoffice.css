@@ -1,0 +1,43 @@
+.cm-config-wrapper { width:993px;}
+.videoblock { font-size:16px; padding:20px 0; color:#00032b; max-width:1000px;}
+.videoblock iframe { float:right; margin:0 0 20px 30px; border-left:1px solid #000000;}
+.videoblock > p  { padding-top:0; margin-top:0;}
+
+.freeblock{ padding:10px 20px 20px 20px; font-size:16px; background:#4d228b url(../img/bgfiol.jpg) repeat-x left top; color:#ffffff; clear:both; text-align:center;}
+.freeblock input {background-color: #84a520; color: #ffffff; border:none; font-size:18px; padding:7px 20px; margin:10px 30px 0 0; text-rendering: optimizelegibility;
+    transition: all 0.3s ease 0s;}
+.freeblock input:hover {background-color: #648500; }
+.freeblock .start { font-weight:bold; font-size:24px;}
+
+.clear { clear:both;}
+
+.featuresblock {padding:20px 0; font-size:14px; max-width:1000px;}
+.featuresblock .lcol { float:left; width:40%;}
+.featuresblock .rcol { float:right; padding:30px 0 0 0;}
+.featuresblock ul { margin-left:0; padding-left:15px;}
+.featuresblock li {font-size:16px; line-height:26px; background:url(../img/m1.png) no-repeat left 4px; list-style:none; padding:0 0 0 35px;}
+
+.cm-config-wrapper h1, .cm-config-wrapper h2, .cm-config-wrapper h3 {color: #4d218b;}
+.cm-config-wrapper h1 { padding:10px 0px 20px 0px; margin:0; line-height:1; font-size:24px;}
+.cm-config-wrapper h3 { padding:0 0 20px 0; margin:0; text-align:center;}
+
+.featuresblock .rcol .connectionform { background:#e7e7e7; padding:20px; }
+.nobootstrap .connectionform label { /*width:40px;*/ padding:0 10px 0 0; text-shadow:none; color:#00032b; font-weight:normal; text-align:left;}
+.nobootstrap .connectionform input { font-size:13px; text-align:left; width:95%; font-family: "Open Sans",Helvetica,Arial,sans-serif;}
+.nobootstrap .connectionform div { padding:0 0 10px 0;}
+.nobootstrap .connectionform input[type=submit] {background-color: white;  box-shadow: 0 0 0 2px #84a520 inset;  color: #84a520;
+    padding-left: 28px;    padding-right: 28px; display: inline-block;    font-size: 18px;    line-height: 40px;    padding: 0 20px;    position: relative;
+    text-rendering: optimizelegibility;    transition: all 0.3s ease 0s; border:none; width:auto; text-align:center;}
+.nobootstrap .connectionform input[type=submit]:hover {background-color: #84a520; color: #dff69a;}
+.nobootstrap .connectionform div.btn { padding:10px 0 0 0; text-align:center;}
+
+.header { border-bottom:1px solid #cccccc; padding:0px 0 15px 0;}
+.header img { /*float:left; margin:0 250px 0 0;*/}
+.header:after {   content: " ";    visibility: hidden;   display: block;   height: 0;   clear: both;}
+
+.gallery_block a.gallery { display:block; width:230px; float:left; margin:0 15px 0 0; text-align:center; font-size:16px; font-weight:bold; color: #555555; text-decoration:none;}
+.gallery_block a.gallery:hover { opacity:0.8;}
+.gallery_block a.gallery img { border:1px solid #cccccc; margin:0 0 10px 0;}
+
+.starleft {background:url(../img/stars.png) no-repeat left top; width:40px; height:27px; display:inline-block; margin:0 10px 0 0; }
+.starright {background:url(../img/stars2.png) no-repeat left top; width:40px; height:27px; display:inline-block; margin:0 0 0 10px; }
