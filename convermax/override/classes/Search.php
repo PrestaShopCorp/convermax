@@ -78,49 +78,49 @@ class Search extends SearchCore
 		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'), Configuration::get('CONVERMAX_CERT'));
 		if (!$convermax->batchStart())
 			return false;
-		$product = new Product();
-		$products = $product->getProducts($id_lang, 0, 0, 'id_product', 'ASC', false, true);
-		$products = Product::getProductsProperties((int)$id_lang, $products);
-
-		$products_array = array();
-		$products_count = count($products);
-
-		for ($i = 0; $i < $products_count; $i++)
+		while (($products = Search::getProductsToIndex($id_lang, $id_product, 50)) && (count($products) > 0))
 		{
-			$products[$i]['_CatalogName'] = 'products';
-			if ($products[$i]['features'])
+			$products_array = array();
+			$products_count = count($products);
+
+			for ($i = 0; $i < $products_count; $i++)
 			{
-				foreach ($products[$i]['features'] as $feature)
-					$products[$i][$feature['name']] = $feature['value'];
-				unset($products[$i]['features']);
+				$products[$i]['_CatalogName'] = 'products';
+				if ($products[$i]['features'])
+				{
+					foreach ($products[$i]['features'] as $feature)
+						$products[$i][$feature['name']] = $feature['value'];
+					unset($products[$i]['features']);
+				}
+
+				$img_id = Product::getCover($products[$i]['id_product']);
+				$link = new Link();
+				$products[$i]['img_link'] = 'http://'.
+					$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
+
+				$cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
+				$full_category = '';
+				$j = 0;
+				foreach ($cat_full as $cat)
+				{
+					if ($j > 0)
+						$full_category .= $cat['name'].($j == (count($cat_full) - 1) ? '' : '>');
+					$j++;
+				}
+
+				$products[$i]['category_full'] = $full_category;
+
+				if (!in_array($products[$i]['id_product'], $products_array))
+					$products_array[] = (int)$products[$i]['id_product'];
 			}
 
-			$img_id = Product::getCover($products[$i]['id_product']);
-			$link = new Link();
-			$products[$i]['img_link'] = 'http://'.$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
+			if (!$convermax->batchAdd($products))
+				return false;
 
-			$cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
-			$full_category = '';
-			$j = 0;
-			foreach ($cat_full as $cat)
-			{
-				if ($j > 0)
-					$full_category .= $cat['name'].($j == (count($cat_full) - 1) ? '' : '>');
-				$j++;
-			}
-
-			$products[$i]['category_full'] = $full_category;
-
-			if (!in_array($products[$i]['id_product'], $products_array))
-				$products_array[] = (int)$products[$i]['id_product'];
+			Search::setProductsAsIndexed($products_array);
 		}
-
-		if (!$convermax->batchAdd($products))
-			return false;
-
 		if (!$convermax->batchEnd())
 			return false;
-		Search::setProductsAsIndexed($products_array);
 		return true;
 	}
 
@@ -142,7 +142,6 @@ class Search extends SearchCore
 		else
 			$order_desc = false;
 
-		//$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
 		$search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets, $order_by, $order_desc);
 		$product_pool = '';
 		$items = 'Items';
@@ -157,9 +156,6 @@ class Search extends SearchCore
 		//sort by convermax result
 		$order = 'FIELD(p.`id_product`, '.$product_order_by.')';
 		$order_way = 'asc';
-
-		/*if ($ajax)
-			return $convermax->autocomplete($expr);*/
 
 		if (strpos($order_by, '.') > 0)
 		{
@@ -205,5 +201,24 @@ class Search extends SearchCore
 			$result_properties = Product::getProductsProperties((int)$id_lang, $result);
 
 		return array('total' => $total,'result' => $result_properties, 'cm_result' => $search_results);
+	}
+
+	protected static function getProductsToIndex($id_lang, $id_product = false, $limit = 50)
+	{
+		$sql = 'SELECT p.*, product_shop.*, pl.* , m.`name` AS manufacturer_name, s.`name` AS supplier_name
+				FROM `'._DB_PREFIX_.'product` p
+				'.Shop::addSqlAssociation('product', 'p').'
+				LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (p.`id_product` = pl.`id_product` '.Shop::addSqlRestrictionOnLang('pl').')
+				LEFT JOIN `'._DB_PREFIX_.'manufacturer` m ON (m.`id_manufacturer` = p.`id_manufacturer`)
+				LEFT JOIN `'._DB_PREFIX_.'supplier` s ON (s.`id_supplier` = p.`id_supplier`)
+				WHERE pl.`id_lang` = '.(int)$id_lang.
+			' AND product_shop.visibility IN ("both", "search")
+			'.($id_product ? 'AND p.id_product = '.(int)$id_product : '').'
+			AND product_shop.indexed = 0
+			AND product_shop.`active` = 1
+			LIMIT '.(int)$limit;
+
+		$products = Db::getInstance()->executeS($sql);
+		return Product::getProductsProperties($id_lang, $products);
 	}
 }

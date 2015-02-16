@@ -84,6 +84,7 @@ class ConvermaxAPI
 		if (curl_errno($ch))
 			return false;
 		unset($data);
+
 		return true;
 	}
 

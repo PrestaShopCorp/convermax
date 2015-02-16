@@ -29,7 +29,7 @@
 })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-41340404-1', 'auto');
-ga('send', 'pageview');
+//ga('send', 'pageview');
 
 //youtube
 var tag = document.createElement('script');
@@ -58,15 +58,15 @@ function onPlayerReady(e) {
 function onPlayerStateChange(e) {
     e.data == YT.PlayerState.PLAYING && setTimeout(onPlayerPercent, 1000, e.target);
     if (e.data == YT.PlayerState.PLAYING) {
-        ga('send', 'event', 'Presta', 'Play');
+        ga('send', 'event', 'Presta', 'Play', window.location.hostname);
         pauseFlag = true;
     }
     if (e.data == YT.PlayerState.PAUSED && pauseFlag) {
-        ga('send', 'event', 'Presta', 'Pause');
+        ga('send', 'event', 'Presta', 'Pause', window.location.hostname);
         pauseFlag = false;
     }
     if (e.data == YT.PlayerState.ENDED) {
-        ga('send', 'event', 'Presta', 'Finished');
+        ga('send', 'event', 'Presta', 'Finished', window.location.hostname);
     }
 }
 
@@ -74,7 +74,7 @@ function onPlayerPercent(e) {
     if (e.getPlayerState() == YT.PlayerState.PLAYING) {
         var t = e.getDuration() - e.getCurrentTime() <= 1.5 ? 1 : (Math.floor(e.getCurrentTime() / e.getDuration() * 4) / 4).toFixed(2);         if (!e.lastP || t > e.lastP &&(t != 0 && t != 1)) {
             e.lastP = t;
-            ga('send', 'event', 'Presta', t * 100 + "%");
+            ga('send', 'event', 'Presta', t * 100 + "%", window.location.hostname);
         }
     e.lastP != 1 && setTimeout(onPlayerPercent, 1000, e);
     }
@@ -85,7 +85,7 @@ $(document).ready(function() {
     $("a.gallery").fancybox({
         beforeLoad: function () {
             var filename = this.href.replace(/^.*[\\\/]/, '');
-            ga('send', 'event', 'Presta', filename);
+            ga('send', 'event', 'Presta', filename, window.location.hostname);
         }
     });
     $("#startbutton").click(function(e){
@@ -96,7 +96,7 @@ $(document).ready(function() {
                 linker = new window.gaplugins.Linker(trackers[0]);
                 destinationUrl = linker.decorate('//convermax.com/platforms/prestashop');
             }
-            ga('send', 'event', 'Presta', 'Click');
+            ga('send', 'event', 'Presta', 'Click', window.location.hostname);
         }
         window.open(destinationUrl, '_blank');
     })
