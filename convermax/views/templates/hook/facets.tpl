@@ -26,9 +26,6 @@
     var cm_query = '{$query|escape:'html'}';
     cm_params.page = '{$pagenumber|escape:'intval'}';
     cm_params.size = '{$pagesize|escape:'intval'}';
-    {if isset($redirect_url) && $redirect_url}
-        var redirect_url = '{$redirect_url|escape:'html'}';
-    {/if}
     {if isset($facets_params) && $facets_params}
         {$facets_params|escape:'quotes'}
     {/if}

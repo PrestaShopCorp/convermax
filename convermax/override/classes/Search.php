@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of CONVERMAX CORP
 */
 
-require_once('/home/demo/prestashop/www/modules/convermax/ConvermaxAPI.php');
+require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
 
 class Search extends SearchCore
 {
@@ -78,8 +78,10 @@ class Search extends SearchCore
 		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'), Configuration::get('CONVERMAX_CERT'));
 		if (!$convermax->batchStart())
 			return false;
-		while (($products = Search::getProductsToIndex($id_lang, $id_product, 50)) && (count($products) > 0))
+		while ($products = Search::getProductsToIndex($id_lang, $id_product, 50))
 		{
+			if (count($products) == 0)
+				break;
 			$products_array = array();
 			$products_count = count($products);
 
@@ -155,13 +157,6 @@ class Search extends SearchCore
 
 		//sort by convermax result
 		$order = 'FIELD(p.`id_product`, '.$product_order_by.')';
-		$order_way = 'asc';
-
-		if (strpos($order_by, '.') > 0)
-		{
-			$order_by = explode('.', $order_by);
-			$order_by = pSQL($order_by[0]).'.`'.pSQL($order_by[1]).'`';
-		}
 
 		$sql = 'SELECT p.*, product_shop.*, stock.out_of_stock, IFNULL(stock.quantity, 0) as quantity,
 				pl.`description_short`, pl.`available_now`, pl.`available_later`, pl.`link_rewrite`, pl.`name`,

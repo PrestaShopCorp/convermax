@@ -27,6 +27,8 @@
 if (!defined('_PS_VERSION_'))
 	exit;
 
+require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
+
 class Convermax extends Module
 {
 	public function __construct()
@@ -34,7 +36,7 @@ class Convermax extends Module
 		$this->name = 'convermax';
 		$this->tab = 'search_filter';
 		$this->version = '1.0.0';
-		$this->author = 'Author';
+		$this->author = 'CONVERMAX CORP';
 
 		parent::__construct();
 
@@ -47,17 +49,21 @@ class Convermax extends Module
 	public function install()
 	{
 		if (!parent::install() || !$this->registerHook('leftColumn') || !$this->registerHook('header') || !$this->registerHook('backOfficeHeader')
-	|| !function_exists('curl_init'))
+		|| !$this->registerHook('productTab')
+		|| !$this->registerHook('actionCartSave')
+		|| !$this->registerHook('actionPaymentConfirmation')
+		|| !function_exists('curl_init'))
 			return false;
 		return true;
 	}
 
 	public function uninstall()
 	{
-		if (parent::uninstall())
-			return true;
-		else
+		if (!parent::uninstall())
 			return false;
+		Configuration::deleteByName('CONVERMAX_URL');
+		Configuration::deleteByName('CONVERMAX_CERT');
+		return true;
 	}
 
 	public function getContent()
@@ -87,16 +93,19 @@ class Convermax extends Module
 					else
 						Configuration::updateValue('CONVERMAX_CERT', $file_path);
 				}
-				Configuration::updateValue('CONVERMAX_URL', Tools::getvalue('url'));
+				if (stristr(Tools::substr(Tools::getvalue('url'), -1), '/'))
+					$url = Tools::substr(Tools::getvalue('url'), 0, -1);
+				else
+					$url = Tools::getvalue('url');
+				Configuration::updateValue('CONVERMAX_URL', $url);
 				return $this->displayConfirmation($this->l('Configuration updated'));
 			}
 			return $this->displayError($this->l('Choose file'));
 		}
 	}
 
-	public function hookLeftColumn($params)
+	public function hookLeftColumn()
 	{
-		unset($params);
 		if (get_class($this->context->controller) == 'SearchController')
 		{
 			$this->context->smarty->assign(array(
@@ -107,19 +116,74 @@ class Convermax extends Module
 		return '';
 	}
 
-	public function hookHeader($params)
+	public function hookHeader()
 	{
-		unset($params);
+		$this->context->controller->addJQueryUI('ui.slider');
+		$this->context->controller->addJqueryPlugin('cooki-plugin');
 		$this->context->controller->addJS($this->_path.'/views/js/convermax.js');
 		$this->context->controller->addCSS($this->_path.'/views/css/convermax.css');
-		$this->context->controller->addJQueryUI('ui.slider');
+
+		if (get_class($this->context->controller) == 'SearchController')
+			$this->context->controller->addJS($this->_path.'/views/js/convermax-search.js');
+		Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
+	}
+
+	public function hookProductTab($params)
+	{
+		if (Tools::getValue('results') && Tools::getValue('pid') && Tools::getValue('position') && Tools::getValue('page') && Tools::getValue('num'))
+		{
+			if (Tools::getValue('page') == 1)
+				$position = Tools::getValue('position');
+			else
+				$position = (Tools::getValue('page') - 1) * Tools::getValue('num') + Tools::getValue('position');
+			$event_params = array(
+				'Position' => $position,
+				'Total' => Tools::getValue('results'),
+				'ProductId' => Tools::getValue('pid')
+			);
+			$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+			$convermax->track('ClickOnSearchResult', $event_params);
+		}
+
+		$event_params = array(
+			'ProductId' => $params['product']->id
+		);
+		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax->track('ProductView', $event_params);
+
+	}
+
+	public function hookActionCartSave()
+	{
+		if (Tools::getValue('add') == 1)
+		{
+			$event_params = array(
+				'ProductId' => Tools::getValue('id_product')
+			);
+
+		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax->track('AddToCart', $event_params);
+		}
+	}
+
+	public function hookActionPaymentConfirmation($params)
+	{
+		$order = new Order($params['id_order']);
+		$products = $order->getProducts();
+		$ids = array();
+		foreach ($products as $product)
+			$ids[] = $product['product_id'];
+		$event_params = array(
+			'ProductId' => Tools::jsonEncode($ids)
+		);
+		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax->track('ConfirmOrder', $event_params);
 	}
 
 	public function hookBackOfficeHeader()
 	{
 		$this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
 		$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
-		//$this->context->controller->addJqueryPlugin('fancybox');
 	}
 
 	public function ajaxCall()
@@ -139,6 +203,14 @@ class Convermax extends Module
 
 		$search = Search::find($this->context->language->id, $query, $srch_cntrl->p, $srch_cntrl->n, $srch_cntrl->orderBy,
 			$srch_cntrl->orderWay, false, true, null, $facets);
+
+		$position = 1;
+		foreach ($search['result'] as &$product)
+		{
+			$product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'].
+				'&pid='.(int)$product['id_product'].'&position='.$position.'&page='.$srch_cntrl->p.'&num='.$srch_cntrl->n;
+			$position++;
+		}
 
 		Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
 		$nbProducts = $search['total'];

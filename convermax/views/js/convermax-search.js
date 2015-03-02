@@ -76,14 +76,14 @@ var cm_params = {
         //get sliders
         keys = Object.keys(this.sliders);
         for(var i = 0; i < keys.length; i++ ) {
-                if (format == 'url') {
-                    data += /*(i == 0 ? '' : '&') + */'&cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.sliders[keys[i]][0]);
-                }
-                if (format == 'list') {
-                    if (this.sliders[keys[i]][0] != this.sliders[keys[i]][1]) {
+            if (format == 'url') {
+                data += /*(i == 0 ? '' : '&') + */'&cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.sliders[keys[i]][0]);
+            }
+            if (format == 'list') {
+                if (this.sliders[keys[i]][0] != this.sliders[keys[i]][1]) {
                     data += '<li><span onclick="cm_params.ResetSlider(\'' + keys[i] + '\', \'' + this.sliders[keys[i]][1] + '\');cm_reload();">[x]</span>' + keys[i] + ' - ' + this.sliders[keys[i]][0] + '</li>';
-                    }
                 }
+            }
         }
 
         return data;
@@ -100,9 +100,8 @@ var ajaxLoaderOn = 0;
 $(document).ready(function()
 {
 
-    if (typeof redirect_url != 'undefined' && redirect_url) {
-        window.location = redirect_url;
-    }
+    getUserId();
+    getSessionId();
 
     $('#cm_facets').on('change', 'input[type=checkbox]', function()
     {
@@ -137,9 +136,6 @@ $(document).ready(function()
         cm_params.orderway = splitData[1];
         cm_params.page = 1;
 
-        console.log(cm_params.orderby);
-        console.log(cm_params.orderway);
-
         cm_reload();
     });
 
@@ -148,71 +144,7 @@ $(document).ready(function()
     cm_initTrees();
     cm_paginationButton();
     cm_displayCurrentSearchBlock();
-
-    //autocomplete part
-    $("#search_query_" + blocksearch_type).unautocomplete();
-
-    var width_ac_results = 	$("#search_query_" + blocksearch_type).parent('form').width();
-    if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof blocksearch_type !== 'undefined' && blocksearch_type)
-        $("#search_query_" + blocksearch_type).autocomplete(
-            search_url,
-            {
-                minChars: 3,
-                max: 10,
-                width: (width_ac_results > 0 ? width_ac_results : 500),
-                selectFirst: false,
-                scroll: false,
-                dataType: "json",
-                formatItem: function(data, i, max, value, term) {
-                    if (value == 'freetext') {
-                        return '<div class="autocomplete-item">' + data.Text + '</div>';
-                    }
-                    if (value == 'product') {
-                        return '<div class="autocomplete-item"><img src="' + data.img_link + '"><div class="autocomplete-desc">' + data.description_short + '</div></div>';
-                    }
-                    if (value == 'category') {
-                        return '<div class="autocomplete-item">' + data.FacetValue + '</div>';
-                    }
-                    if (value == 'group') {
-                        return '<div class="autocomplete-group">' + data + '</div>';
-                    }
-                },
-                parse: function(data) {
-                    var mytab = new Array();
-                    var displayproduct = true;
-                    var displaycat = true;
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].Type == 'product' && displayproduct) {
-                        mytab[mytab.length] = { data: 'Product Search:', value: 'group' };
-                        displayproduct = false;
-                    }
-                    if (data[i].Type == 'category' && displaycat) {
-                        mytab[mytab.length] = { data: 'Category Search:', value: 'group' };
-                        displaycat = false;
-                    }
-                    mytab[mytab.length] = {data: data[i], value: data[i].Type};
-                }
-                    return mytab;
-                },
-                extraParams: {
-                    ajaxSearch: 1,
-                    id_lang: id_lang
-                }
-            }
-        )
-            .result(function(event, data, formatted) {
-                if (data.Type == 'freetext') {
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text;
-                }
-                if (data.Type == 'product') {
-                    document.location.href = data.link;
-                }
-                if (data.Type == 'category') {
-                    cm_params.SetFacet(true, data.FieldName, data.FacetValue);
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + cm_params.GetFacets('url');
-                }
-            });
-
+    cm_init();
 
 });
 
@@ -279,7 +211,7 @@ function cm_clearCurrentSearchBlock() {
     cm_params.facets = {};
     var keys = Object.keys(cm_params.sliders);
     for(var i = 0; i < keys.length; i++ ) {
-    cm_params.ResetSlider(keys[i], cm_params.sliders[keys[i]][1]);
+        cm_params.ResetSlider(keys[i], cm_params.sliders[keys[i]][1]);
     }
     cm_reload();
 }
@@ -341,7 +273,6 @@ function cm_reload(params) {
                 cm_paginationButton();
                 cm_initSliders();
                 cm_initTrees();
-                initUniform();
                 ajaxLoaderOn = 0;
 
                 $('div.pagination form').on('submit', function(e)
@@ -360,8 +291,9 @@ function cm_reload(params) {
 
                 if (display instanceof Function) {
                     var view = $.totalStorage('display');
-                        display(view);
+                    display(view);
                 }
+                cm_init();
 
                 history.pushState(null, '', loc);
             },
@@ -401,7 +333,7 @@ function cm_paginationButton() {
 }
 
 
-function initUniform()
+function cm_init()
 {
     $("#cm_facets input[type='checkbox'], select.form-control").uniform();
 }

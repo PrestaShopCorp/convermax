@@ -75,8 +75,15 @@ class SearchController extends SearchControllerCore
 			$query = Tools::replaceAccentedChars(urldecode($query));
 
 			$search = Search::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay, false, true, null, $facets);
+			if (isset($search['cm_result']->Actions[0]->RedirectUrl))
+				die(Tools::redirect($search['cm_result']->Actions[0]->RedirectUrl));
+			$position = 1;
 			foreach ($search['result'] as &$product)
-				$product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'];
+			{
+				$product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'].
+					'&pid='.(int)$product['id_product'].'&position='.$position.'&page='.$this->p.'&num='.$this->n;
+				$position++;
+			}
 
 			Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
 			$nbProducts = $search['total'];
@@ -145,13 +152,11 @@ class SearchController extends SearchControllerCore
 				if ($facets[$facet->{$field_name}])
 				{
 					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.' = []'.";\r\n";
-					//$facets_params .= 'cm_params.sliders.' . $facet->FieldName . '[0]' . ' = \'' . $facets[$facet->FieldName][0] . "';\r\n";
 					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$facets[$facet->{$field_name}][0]."\";\r\n";
 				}
 				else
 				{
 					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.' = []'.";\r\n";
-					//$facets_params .= 'cm_params.sliders.' . $facet->FieldName . '[0]' . ' = \'' . $facet->Values[0]->Term . "';\r\n";
 					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$facet->{$values}[0]->Term."\";\r\n";
 				}
 			}
@@ -163,24 +168,19 @@ class SearchController extends SearchControllerCore
 					if ($facet->{$values}[$i]->Selected == true)
 					{
 						$facets_params .= 'cm_params.facets.'.$facet->{$field_name}.' = []'.";\r\n";
-						//$facets_params .= 'cm_params.facets.' . $facet->FieldName . '[' . $i . ']' . ' = \'' . $facet->Values[$i]->Term . "';\r\n";
 						$facets_params .= 'cm_params.facets.'.$facet->{$field_name}.'['.$i.'] = "'.$facet->{$values}[$i]->Term."\";\r\n";
-						//$facets_params .= 'cm_params.facets_display.' . $facet->FieldName . ' = []' . ";\r\n";
-						//$facets_params .= 'cm_params.facets_display.' . $facet->FieldName . ' = \'' . $facet->DisplayName . "';\r\n";
 						$facets_params .= 'cm_params.facets_display.'.$facet->{$field_name}.' = "'.$facet->{$display_name}."\";\r\n";
 					}
 				}
 			}
 		}
 
-		//global $smarty;
 		$this->context->smarty->assign(array(
 			'facets' => $search['cm_result']->Facets,
 			'query' => $search['cm_result']->Query,
 			'pagenumber' => $this->p,
 			'pagesize' => $this->n,
-			'facets_params' => isset($facets_params) ? $facets_params : false,
-			'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false,
+			'facets_params' => isset($facets_params) ? $facets_params : false
 		));
 		$this->setTemplate(_PS_MODULE_DIR_.'convermax/views/templates/hook/search.tpl');
 		$front_controller = get_parent_class(get_parent_class($this));

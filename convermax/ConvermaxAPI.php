@@ -126,6 +126,10 @@ class ConvermaxAPI
 
 		if ($order_by)
 			$url .= '&sort.0.fieldname='.$order_by.($order_desc ? '&sort.0.descending=true' : '');
+		$url .= '&analytics.userid='.$this->getCookie('cmuid');
+		$url .= '&analytics.sessionid='.$this->getCookie('cmsid');
+		$url .= '&analytics.useragent='.urlencode($_SERVER['HTTP_USER_AGENT']);
+		$url .= '&analytics.userip='.$_SERVER['REMOTE_ADDR'];
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -141,6 +145,10 @@ class ConvermaxAPI
 	public function autocomplete($query)
 	{
 		$url = $this->url.'/autocomplete/json?query='.urlencode($query);
+		$url .= '&analytics.userid='.$this->getCookie('cmuid');
+		$url .= '&analytics.sessionid='.$this->getCookie('cmsid');
+		$url .= '&analytics.useragent='.urlencode($_SERVER['HTTP_USER_AGENT']);
+		$url .= '&analytics.userip='.$_SERVER['REMOTE_ADDR'];
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -150,6 +158,40 @@ class ConvermaxAPI
 		if (curl_errno($ch))
 			return false;
 		return $data;
+	}
+
+	public function track($event_type, $event_params)
+	{
+		$params = array(
+			'EventType' => $event_type,
+			'EventParams' => $event_params,
+			'UserID' => $this->getCookie('cmuid'),
+			'SessionID' => $this->getCookie('cmsid'),
+			'UserAgent' => $_SERVER['HTTP_USER_AGENT'],
+			'UserIP' => $_SERVER['REMOTE_ADDR']
+		);
+
+		$url = $this->url.'/track';
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($params));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		$data = curl_exec($ch);
+		echo curl_error($ch);
+		if (curl_errno($ch))
+			return false;
+		unset($data);
+
+		return true;
+	}
+
+	public function getCookie($name)
+	{
+		return "$_COOKIE[$name]";
 	}
 
 }
