@@ -87,7 +87,10 @@ class Convermax extends Module
 					return $this->displayError($this->l('Invalid file'));
 				else
 				{
-					$file_path = dirname(__FILE__).DIRECTORY_SEPARATOR.'key'.DIRECTORY_SEPARATOR.'convermax.pem';
+					$key_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'key';
+					if (!is_writable($key_dir))
+						return $this->displayError($this->l('directory ('.$key_dir.') not writable'));
+					$file_path = $key_dir.DIRECTORY_SEPARATOR.'convermax.pem';
 					if (!move_uploaded_file($_FILES['cert']['tmp_name'], $file_path))
 						return $this->displayError($this->l('An error occurred while attempting to upload the file.'));
 					else
@@ -97,6 +100,8 @@ class Convermax extends Module
 					$url = Tools::substr(Tools::getvalue('url'), 0, -1);
 				else
 					$url = Tools::getvalue('url');
+				if (!$url)
+					return $this->displayError($this->l('Enter URL'));
 				Configuration::updateValue('CONVERMAX_URL', $url);
 				return $this->displayConfirmation($this->l('Configuration updated'));
 			}

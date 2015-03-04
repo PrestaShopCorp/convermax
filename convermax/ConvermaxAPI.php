@@ -181,7 +181,7 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		$data = curl_exec($ch);
-		echo curl_error($ch);
+		//echo curl_error($ch);
 		if (curl_errno($ch))
 			return false;
 		unset($data);

@@ -24,7 +24,8 @@
 *  International Registered Trademark & Property of CONVERMAX CORP
 */
 
-require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
+if (Module::isInstalled('convermax'))
+	require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
 
 class Search extends SearchCore
 {
@@ -97,8 +98,8 @@ class Search extends SearchCore
 
 				$img_id = Product::getCover($products[$i]['id_product']);
 				$link = new Link();
-				$products[$i]['img_link'] = 'http://'.
-					$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
+				$fix = 'http:/';
+				$products[$i]['img_link'] = $fix.'/'.$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
 
 				$cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
 				$full_category = '';
