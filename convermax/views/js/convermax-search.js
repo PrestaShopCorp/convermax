@@ -107,7 +107,9 @@ $(document).ready(function()
     {
         cm_params.SetFacet(this.checked, this.dataset.fieldname, this.value, this.dataset.displayname);
         cm_params.page = 1;
-        cm_reload();
+        var params = {};
+        params.searchfeatures = 'FacetSelected';
+        cm_reload(params);
     });
 
     $(document).off('change', 'select[name="n"]');
@@ -171,7 +173,9 @@ function cm_initSliders() {
                 var newselection = '[' + ui.values[0] + ' TO ' + ui.values[1] +']';
                 cm_params.sliders[this.dataset.fieldname][0] = newselection;
                 cm_params.page = 1;
-                cm_reload();
+                var params = {};
+                params.searchfeatures = 'FacetSelected';
+                cm_reload(params);
             }
         });
     });
@@ -185,7 +189,9 @@ function cm_initTrees()
         e.preventDefault();
         cm_params.page = 1;
         cm_params.SetFacet(true, this.dataset.fieldname, this.dataset.value, this.dataset.displayname);
-        cm_reload();
+        var params = {};
+        params.searchfeatures = 'FacetSelected';
+        cm_reload(params);
     });
 }
 
@@ -243,6 +249,9 @@ function cm_reload(params) {
     var request = cm_params.GetFacets('url') + '&p=' + cm_params.page + '&n=' + cm_params.size + '&search_query=' + cm_query;
     if (cm_params.orderby) {
         request += '&orderby=' + encodeURIComponent(cm_params.orderby) + '&orderway=' + cm_params.orderway;
+    }
+    if (typeof params != 'undefined' && typeof params.searchfeatures != 'undesined') {
+        request += '&searchfeatures=' + params.searchfeatures;
     }
 
     var loc = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + request;

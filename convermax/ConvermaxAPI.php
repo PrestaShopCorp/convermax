@@ -97,21 +97,6 @@ class ConvermaxAPI
 		}
 		$url = $this->url.'/search/json?query='.urlencode($query);
 		$url .= '&page='.$page_number.'&pagesize='.$page_size;
-		/*if ($facets)
-		{
-			$i = 0;
-			foreach ($facets as $key => $val)
-			{
-				$u .= '&facet.'.$i.'.field='.urlencode($key);
-				foreach ($val as $v)
-				{
-					//facet.0.field=CurrentPrice&facet.0.selection=[100%20TO%20249.99]&facet.0.selection=[250%20TO%20399.99]&facet.0.selection=[400%20TO%20599.99]&
-					$u .= '&facet.'.$i.'.selection='.urlencode($v);
-				}
-				$i++;
-			}
-			$url .= $u;
-		}*/
 		if ($facets)
 		{
 			$i = 0;
@@ -130,6 +115,8 @@ class ConvermaxAPI
 		$url .= '&analytics.sessionid='.$this->getCookie('cmsid');
 		$url .= '&analytics.useragent='.urlencode($_SERVER['HTTP_USER_AGENT']);
 		$url .= '&analytics.userip='.$_SERVER['REMOTE_ADDR'];
+		if (Tools::getValue('searchfeatures'))
+			$url .= '&analytics.eventparams.searchfeatures='.Tools::getValue('searchfeatures');
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);

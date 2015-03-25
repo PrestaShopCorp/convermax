@@ -28,6 +28,10 @@ $(document).ready(function()
     getUserId();
     getSessionId();
 
+    var input = $("<input>")
+        .attr("type", "hidden")
+        .attr("name", "searchfeatures").val("QueryTyped");
+    $("#search_query_" + blocksearch_type).parent('form').append($(input));
 
     //autocomplete part
     $("#search_query_" + blocksearch_type).unautocomplete();
@@ -83,14 +87,14 @@ $(document).ready(function()
         )
             .result(function(event, data, formatted) {
                 if (data.Type == 'Freetext') {
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text;
+                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text + '&searchfeatures=QueryTyped';
                 }
                 if (data.Type == 'Product') {
                     document.location.href = data.link;
                 }
                 if (data.Type == 'Category') {
                     //cm_params.SetFacet(true, data.FieldName, data.FacetValue);
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue;
+                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue + '&searchfeatures=FacetSelected';
                 }
             });
 });
