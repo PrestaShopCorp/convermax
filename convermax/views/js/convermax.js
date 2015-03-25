@@ -90,18 +90,17 @@ $(document).ready(function()
             }
         )
             .result(function(event, data, formatted) {
+                var loc;
                 if (data.Type == 'Freetext') {
-                    trackAutocomplete(data);
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text + '&searchfeatures=QueryTyped';
+                    loc = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text + '&searchfeatures=QueryTyped';
                 }
                 if (data.Type == 'Product') {
-                    trackAutocomplete(data);
-                    document.location.href = data.link;
+                    loc = data.link;
                 }
                 if (data.Type == 'Category') {
-                    trackAutocomplete(data);
-                    document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue + '&searchfeatures=FacetSelected';
+                    loc = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue + '&searchfeatures=FacetSelected';
                 }
+                cmAutocomplete(data, loc);
             });
 });
 
@@ -146,7 +145,7 @@ function getSessionId() {
 
 
 
-function trackAutocomplete(item) {
+function cmAutocomplete(item, loc) {
     var eventParams = {
         SuggestionType: item.Type,
         UserInput: item.term,
@@ -164,7 +163,25 @@ function trackAutocomplete(item) {
             eventParams.Value = item.FacetValue;
             break;
     }
-    trackEvent('SuggestionSelection', eventParams);
+    var event = {};
+    event.UserAgent = window.navigator.userAgent;
+    event.UserID = getUserId();
+    event.SessionID = getSessionId();
+    event.EventType = 'SuggestionSelection';
+    event.EventParams = eventParams;
+
+    $.ajax({
+        type: 'POST',
+        url: cm_url + '/track',
+        data: JSON.stringify(event),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function(result)
+        {
+            document.location.href = loc;
+        }
+    });
+    //trackEvent('SuggestionSelection', eventParams);
 }
 
 function trackEvent(eventType, eventParams) {
