@@ -50,14 +50,15 @@ $(document).ready(function()
                 scroll: false,
                 dataType: "json",
                 formatItem: function(data, i, max, value, term) {
+                    var params = {};
                     if (value == 'Freetext') {
-                        return '<div class="autocomplete-item" onclick="trackAutocomplete(this)" data-type="' + value + '" data-term="' + term + '" data-position="' + i + '" data-value="' + data.Text + '">' + data.Text + '</div>';
+                        return '<div class="autocomplete-item">' + data.Text + '</div>';
                     }
                     if (value == 'Product') {
-                        return '<div class="autocomplete-item" onclick="trackAutocomplete(this)" data-type="'+ value +'" data-term="' + term + '" data-position="' + (i - 1) + '" data-id="' + data.id_product + '"><img src="' + data.img_link + '"><div class="autocomplete-desc">' + data.description_short + '</div></div>';
+                        return '<div class="autocomplete-item"><img src="' + data.img_link + '"><div class="autocomplete-desc">' + data.description_short + '</div></div>';
                     }
                     if (value == 'Category') {
-                        return '<div class="autocomplete-item" onclick="trackAutocomplete(this)" data-type="' + value + '" data-term="' + term + '" data-position="' + (i - 2) + '" data-fieldname="' + data.FieldName + '" data-facetvalue="' + data.FacetValue + '">' + data.FacetValue + '</div>';
+                        return '<div class="autocomplete-item">' + data.FacetValue + '</div>';
                     }
                     if (value == 'group') {
                         return '<div class="autocomplete-group">' + data + '</div>';
@@ -67,6 +68,7 @@ $(document).ready(function()
                     var mytab = new Array();
                     var displayproduct = true;
                     var displaycat = true;
+                    var term = $("#search_query_" + blocksearch_type).val();
                     for (var i = 0; i < data.length; i++) {
                         if (data[i].Type == 'Product' && displayproduct) {
                             mytab[mytab.length] = { data: 'Product Search:', value: 'group' };
@@ -76,6 +78,8 @@ $(document).ready(function()
                             mytab[mytab.length] = { data: 'Category Search:', value: 'group' };
                             displaycat = false;
                         }
+                        data[i].position = i + 1;
+                        data[i].term = term;
                         mytab[mytab.length] = {data: data[i], value: data[i].Type};
                     }
                     return mytab;
@@ -87,13 +91,15 @@ $(document).ready(function()
         )
             .result(function(event, data, formatted) {
                 if (data.Type == 'Freetext') {
+                    trackAutocomplete(data);
                     document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text + '&searchfeatures=QueryTyped';
                 }
                 if (data.Type == 'Product') {
+                    trackAutocomplete(data);
                     document.location.href = data.link;
                 }
                 if (data.Type == 'Category') {
-                    //cm_params.SetFacet(true, data.FieldName, data.FacetValue);
+                    trackAutocomplete(data);
                     document.location.href = search_url + ((search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue + '&searchfeatures=FacetSelected';
                 }
             });
@@ -138,6 +144,29 @@ function getSessionId() {
     return makeIdFromCookie("cmsid", date, true);
 }
 
+
+
+function trackAutocomplete(item) {
+    var eventParams = {
+        SuggestionType: item.Type,
+        UserInput: item.term,
+        Position: item.position
+    };
+    switch(item.Type){
+        case 'Freetext':
+            eventParams.Value = item.Text;
+            break;
+        case 'Product':
+            eventParams.ProductId = item.id_product;
+            break;
+        case 'Category':
+            eventParams.Field = item.FieldName;
+            eventParams.Value = item.FacetValue;
+            break;
+    }
+    trackEvent('SuggestionSelection', eventParams);
+}
+
 function trackEvent(eventType, eventParams) {
     var event = {};
     event.UserAgent = window.navigator.userAgent;
@@ -153,25 +182,4 @@ function trackEvent(eventType, eventParams) {
         dataType: 'json',
         contentType: 'application/json'
     });
-}
-
-function trackAutocomplete(item) {
-    var eventParams = {
-        Type: item.dataset.type,
-        UserInput: item.dataset.term,
-        Position: item.dataset.position
-    };
-    switch(item.dataset.type){
-        case 'Freetext':
-            eventParams.Value = item.dataset.value;
-            break;
-        case 'Product':
-            eventParams.ProductId = item.dataset.id;
-            break;
-        case 'Category':
-            eventParams.Field = item.dataset.fieldname;
-            eventParams.Value = item.dataset.facetvalue;
-            break;
-    }
-    trackEvent('SuggestionSelection', eventParams);
 }
