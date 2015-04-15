@@ -62,8 +62,10 @@
           </ul>
         </div>
         <div class="rcol">
-          <div class="connectionform">
+          <div class="connectionform" style="display:none">
+              <a class="hideconnectionform" href="#">{l s='Hide connection form' mod='convermax'}</a>
             <h3> {l s='Have your connection info?' mod='convermax'}  <br>{l s='Configure it now' mod='convermax'}</h3>
+              <p>{l s='If you dont have connection info please sign up' mod='convermax'}</p>
               <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" method="post" enctype="multipart/form-data">
               <label for="url">{l s='Service URL' mod='convermax'}:</label>
               <div>
@@ -74,10 +76,16 @@
                 <input type="file" name="cert" id="fileUpload" />
               </div>
               <div class="btn">
-                <input type="submit" name="submitModule" id="fileUpload" value="Connect" />
+                <input type="submit" name="submitModule" id="fileUpload" value="Save" />
               </div>
             </form>
           </div>
+            <div class="connectionbutton">
+                <a class="showconnectionform" href="#">{l s='Show connection form' mod='convermax'}</a>
+                {*<div class="btn">
+                    <input type="button" id="connectbutton" value="Sign up" />
+                </div>*}
+            </div>
         </div>
         <div class="clear"></div>
       </div>

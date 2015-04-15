@@ -35,8 +35,9 @@ class Convermax extends Module
 	{
 		$this->name = 'convermax';
 		$this->tab = 'search_filter';
-		$this->version = '1.0.0';
+		$this->version = '1.0.1';
 		$this->author = 'CONVERMAX CORP';
+		$this->module_key = '0958874296fcb714c52c9a74f5fdb88f';
 
 		parent::__construct();
 
@@ -54,6 +55,7 @@ class Convermax extends Module
 		|| !$this->registerHook('actionPaymentConfirmation')
 		|| !function_exists('curl_init'))
 			return false;
+		$this->postInstall();
 		return true;
 	}
 
@@ -77,6 +79,24 @@ class Convermax extends Module
 
 	public function postProcess()
 	{
+		if (Tools::getValue('success'))
+		{
+			if (Tools::getValue('success') === 'true')
+				return $this->displayConfirmation($this->l('Configuration updated'));
+			else
+				return $this->displayError($this->l('An error occurred while attempting to get certificate.'));
+		}
+		if (Tools::getValue('cm_token'))
+		{
+			$convermax = new ConvermaxAPI();
+			if ($convermax->getCertificate(Tools::getValue('cm_token')))
+			{
+				if ($convermax->getHash())
+					if ($convermax->createIndexFields())
+						Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&success=true&configure=convermax&token='.Tools::getValue('token'));
+			}
+			Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&success=false&configure=convermax&token='.Tools::getValue('token'));
+		}
 		if (Tools::isSubmit('submitModule'))
 		{
 			if (isset($_FILES['cert'])
@@ -146,14 +166,14 @@ class Convermax extends Module
 				'Total' => Tools::getValue('results'),
 				'ProductId' => Tools::getValue('pid')
 			);
-			$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+			$convermax = new ConvermaxAPI();
 			$convermax->track('ClickOnSearchResult', $event_params);
 		}
 
 		$event_params = array(
 			'ProductId' => $params['product']->id
 		);
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax = new ConvermaxAPI();
 		$convermax->track('ProductView', $event_params);
 
 	}
@@ -166,7 +186,7 @@ class Convermax extends Module
 				'ProductId' => Tools::getValue('id_product')
 			);
 
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax = new ConvermaxAPI();
 		$convermax->track('AddToCart', $event_params);
 		}
 	}
@@ -181,7 +201,7 @@ class Convermax extends Module
 		$event_params = array(
 			'ProductId' => Tools::jsonEncode($ids)
 		);
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax = new ConvermaxAPI();
 		$convermax->track('ConfirmOrder', $event_params);
 	}
 
@@ -260,4 +280,25 @@ class Convermax extends Module
 
 		return Tools::jsonEncode($vars);
 	}
+
+	public function postInstall()
+	{
+		$post = array();
+		$post['WebsiteUrl'] = Configuration::get('PS_SHOP_DOMAIN');
+		$post['Email'] = Configuration::get('PS_SHOP_EMAIL');
+		$post['ShoptName'] = Configuration::get('PS_SHOP_NAME');
+		$url = 'https://api.convermax.com/v2dev/newinstallation';
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($post));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		$data = curl_exec($ch);
+		if (curl_errno($ch))
+			return false;
+		unset($data);
+	}
+
 }

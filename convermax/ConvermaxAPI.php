@@ -30,12 +30,18 @@ class ConvermaxAPI
 	private $url;
 	private $cert;
 
-	public function __construct($url, $cert = '')
+	public function __construct()
 	{
+		$url = Configuration::get('CONVERMAX_URL');
 		if (stristr(Tools::substr($url, -1), '/'))
 			$url = Tools::substr($url, 0, -1);
 		$this->url = $url;
-		$this->cert = $cert;
+		$this->cert = $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT'));
+	}
+
+	public function __destruct()
+	{
+		unlink($this->cert);
 	}
 
 	public function batchStart()
@@ -124,8 +130,8 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
-		if (curl_errno($ch))
-			die('convermax connection error');
+		//if (curl_errno($ch))
+			//$data = 'connection error';
 		return Tools::jsonDecode($data);
 	}
 
@@ -176,9 +182,78 @@ class ConvermaxAPI
 		return true;
 	}
 
-	public function getCookie($name)
+	private function getCookie($name)
 	{
 		return "$_COOKIE[$name]";
+	}
+
+	private function createTmpCertFile($cert)
+	{
+		$file = tempnam(sys_get_temp_dir(), 'PS_');
+		file_put_contents($file, $cert);
+		return $file;
+	}
+
+	public function getCertificate($token)
+	{
+		$url = 'https://api.convermax.com/v2dev/createcertificate?token='.$token;
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		$data = curl_exec($ch);
+		if (curl_errno($ch) || empty($data))
+			return false;
+		Configuration::updateValue('CONVERMAX_CERT', $data);
+		file_put_contents($this->cert, $data);
+		return true;
+	}
+
+	public function getHash()
+	{
+		$name = urlencode(Configuration::get('PS_SHOP_NAME'));
+		$url = 'https://api.convermax.com/v2dev/scheme/create?name='.$name;
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		//curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
+		//curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		$data = curl_exec($ch);
+		if (curl_errno($ch) || empty($data))
+			return false;
+		$this->url = 'http://api.convermax.com/v2dev/'.str_replace('"', '', $data);
+		Configuration::updateValue('CONVERMAX_URL', $this->url);
+		return true;
+	}
+
+	public function createIndexFields()
+	{
+		$properties = array();
+		$properties[0] = Product::getProductProperties(5, array('id_product'=>1));
+		if ($properties[0]['features'])
+		{
+			foreach ($properties[0]['features'] as $feature)
+				$properties[0][$feature['name']] = $feature['value'];
+			unset($properties[0]['features']);
+		}
+		$url = $this->url.'/scheme/createfields?catalog=catalog';
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($properties));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		$data = curl_exec($ch);
+		if (curl_errno($ch))
+			return false;
+		unset($data);
+
+		return true;
 	}
 
 }

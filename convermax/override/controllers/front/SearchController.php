@@ -156,8 +156,11 @@ class SearchController extends SearchControllerCore
 				}
 				else
 				{
+					$rangemin = preg_replace('|TO .*\]|', '', $facet->{$values}[0]->Term);
+					$rangemax = preg_replace('|\[.*? |', '', $facet->{$values}[count($facet->{$values}) - 1]->Term);
 					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.' = []'.";\r\n";
-					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$facet->{$values}[0]->Term."\";\r\n";
+					//$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$facet->{$values}[0]->Term."\";\r\n";
+					$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$rangemin.$rangemax."\";\r\n";
 				}
 			}
 			else

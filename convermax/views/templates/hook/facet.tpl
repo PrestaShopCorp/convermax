@@ -27,7 +27,8 @@
         <div class="cm_facet">
             <p class="cm_facet_title">{$facet->DisplayName|escape:'html'}</p>
             {if $facet->IsRanged}
-                <div class="slider_pad"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html'}" data-range="{$facet->Values[0]->Term|escape:'html'}"></div></div>
+                {*<div class="slider_pad"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html'}" data-range="{$facet->Values[0]->Term|escape:'html'}"></div></div>*}
+                <div class="slider_pad"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html'}" data-range="{$facet->Values[0]->Term|regex_replace:"/ .*\]/":""} {$facet->Values[{$facet->Values|@count}-1]->Term|regex_replace:"/\[.*? /":""}"></div></div>
             {elseif $facet->IsTree}
                 <ul class="cm_tree">
                     {foreach from=$facet->Values item=val}

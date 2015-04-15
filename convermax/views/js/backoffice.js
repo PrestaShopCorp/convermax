@@ -99,5 +99,27 @@ $(document).ready(function() {
             ga('send', 'event', 'Presta', 'Click', window.location.hostname);
         }
         window.open(destinationUrl, '_blank');
+    });
+    $("#startbutton").click(function(e){
+        var trackers, linker;
+        if(ga !== undefined && typeof ga.getAll === 'function') {
+            trackers = ga.getAll();
+            if(trackers.length) {
+                linker = new window.gaplugins.Linker(trackers[0]);
+                destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
+            }
+            ga('send', 'event', 'Presta', 'ClickOnConnectButton', window.location.hostname);
+        }
+        window.location = destinationUrl;
+    });
+    $(".showconnectionform").click(function(e){
+        e.preventDefault();
+        $(".connectionbutton").css('display', 'none');
+        $(".connectionform").css('display', 'block');
+    });
+    $(".hideconnectionform").click(function(e){
+        e.preventDefault();
+        $(".connectionform").css('display', 'none');
+        $(".connectionbutton").css('display', 'block');
     })
 });

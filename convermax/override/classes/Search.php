@@ -76,7 +76,7 @@ class Search extends SearchCore
 				return false;
 		}
 
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'), Configuration::get('CONVERMAX_CERT'));
+		$convermax = new ConvermaxAPI();
 		if (!$convermax->batchStart())
 			return false;
 		while ($products = Search::getProductsToIndex($id_lang, $id_product, 50))
@@ -130,7 +130,7 @@ class Search extends SearchCore
 	public static function find($id_lang, $expr, $page_number = 1, $page_size = 1, $order_by = 'position',
 								$order_way = 'desc', $ajax = false, $use_cookie = true, Context $context = null, $facets = null)
 	{
-		$convermax = new ConvermaxAPI(Configuration::get('CONVERMAX_URL'));
+		$convermax = new ConvermaxAPI();
 		if ($ajax)
 			return $convermax->autocomplete($expr);
 		unset($use_cookie);
