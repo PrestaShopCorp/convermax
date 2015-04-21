@@ -96,8 +96,13 @@ class SearchController extends SearchControllerCore
 				$cm_message = 'nothing found';
 			elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
 			{
-				$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
-				$original_query = $search['cm_result']->Corrections[0]->Replace;
+				if (!empty($search['cm_result']->Corrections[0]->Replace))
+				{
+					$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
+					$original_query = $search['cm_result']->Corrections[0]->Replace;
+				}
+				else
+					$cm_message = 'nothing found';
 			}
 			else
 				$cm_message = false;

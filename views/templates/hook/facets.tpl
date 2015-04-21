@@ -27,7 +27,7 @@
     cm_params.page = '{$pagenumber|escape:'intval'}';
     cm_params.size = '{$pagesize|escape:'intval'}';
     {if isset($facets_params) && $facets_params}
-        {$facets_params|escape:'quotes'}
+        {$facets_params|escape:'quotes':'UTF-8'}
     {/if}
     //alert(cm_params);
 </script>

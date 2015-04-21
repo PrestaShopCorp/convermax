@@ -298,7 +298,7 @@ function cm_reload(params) {
                     cm_reload();
                 });
 
-                if (display instanceof Function) {
+                if (typeof display != 'undefined' && display instanceof Function) {
                     var view = $.totalStorage('display');
                     display(view);
                 }

@@ -27,6 +27,7 @@
 class ConvermaxAPI
 {
 
+	private $base_url;
 	private $url;
 	private $cert;
 
@@ -37,6 +38,10 @@ class ConvermaxAPI
 			$url = Tools::substr($url, 0, -1);
 		$this->url = $url;
 		$this->cert = $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT'));
+		if (preg_match('|(.*?://api\.convermax\.com/.*?)/.*|', $url, $matches))
+			$this->base_url = $matches[1];
+		else
+			$this->base_url = $url;
 	}
 
 	public function __destruct()
@@ -44,9 +49,13 @@ class ConvermaxAPI
 		unlink($this->cert);
 	}
 
-	public function batchStart()
+	public function batchStart($incremental = false)
 	{
-		$url = $this->url.'/batchupdate/start?incremental=false';
+		if ($incremental)
+			$inc = 'true';
+		else
+			$inc = 'false';
+		$url = $this->url.'/batchupdate/start?incremental='.$inc;
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -130,8 +139,6 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
-		//if (curl_errno($ch))
-			//$data = 'connection error';
 		return Tools::jsonDecode($data);
 	}
 
@@ -174,7 +181,6 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		$data = curl_exec($ch);
-		//echo curl_error($ch);
 		if (curl_errno($ch))
 			return false;
 		unset($data);
@@ -184,7 +190,9 @@ class ConvermaxAPI
 
 	private function getCookie($name)
 	{
-		return "$_COOKIE[$name]";
+		if (isset($_COOKIE[$name]))
+			return "$_COOKIE[$name]";
+		return false;
 	}
 
 	private function createTmpCertFile($cert)
@@ -196,7 +204,7 @@ class ConvermaxAPI
 
 	public function getCertificate($token)
 	{
-		$url = 'https://api.convermax.com/v2dev/createcertificate?token='.$token;
+		$url = $this->base_url.'/createcertificate?token='.$token;
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -212,18 +220,16 @@ class ConvermaxAPI
 	public function getHash()
 	{
 		$name = urlencode(Configuration::get('PS_SHOP_NAME'));
-		$url = 'https://api.convermax.com/v2dev/scheme/create?name='.$name;
+		$url = $this->base_url.'/scheme/create?name='.$name;
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		//curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
-		//curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		$data = curl_exec($ch);
 		if (curl_errno($ch) || empty($data))
 			return false;
-		$this->url = 'http://api.convermax.com/v2dev/'.str_replace('"', '', $data);
+		$this->url = $this->base_url.'/'.str_replace('"', '', $data);
 		Configuration::updateValue('CONVERMAX_URL', $this->url);
 		return true;
 	}
@@ -254,6 +260,15 @@ class ConvermaxAPI
 		unset($data);
 
 		return true;
+	}
+
+	public function sanitize($string)
+	{
+		$chars = array('+', '-', '&', '|', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', ',', "'", ' ');
+		$string = str_replace($chars, '_', $string);
+		$string = preg_replace('|_+|', '_', $string);
+		$string = trim($string, '_');
+		return $string;
 	}
 
 }

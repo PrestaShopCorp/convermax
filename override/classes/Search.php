@@ -77,7 +77,7 @@ class Search extends SearchCore
 		}
 
 		$convermax = new ConvermaxAPI();
-		if (!$convermax->batchStart())
+		if (!$convermax->batchStart(!$full))
 			return false;
 		while ($products = Search::getProductsToIndex($id_lang, $id_product, 50))
 		{
@@ -92,7 +92,10 @@ class Search extends SearchCore
 				if ($products[$i]['features'])
 				{
 					foreach ($products[$i]['features'] as $feature)
-						$products[$i][$feature['name']] = $feature['value'];
+					{
+						$f_name = 'f_'.$convermax->sanitize($feature['name']);
+						$products[$i][$f_name] = $feature['value'];
+					}
 					unset($products[$i]['features']);
 				}
 

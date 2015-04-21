@@ -55,6 +55,7 @@ class Convermax extends Module
 		|| !$this->registerHook('actionPaymentConfirmation')
 		|| !function_exists('curl_init'))
 			return false;
+		Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2');
 		return true;
 	}
 
@@ -106,6 +107,7 @@ class Convermax extends Module
 					return $this->displayError($this->l('Invalid file'));
 				else
 					Configuration::updateValue('CONVERMAX_CERT', Tools::file_get_contents($_FILES['cert']['tmp_name']));
+			}
 				if (stristr(Tools::substr(Tools::getvalue('url'), -1), '/'))
 					$url = Tools::substr(Tools::getvalue('url'), 0, -1);
 				else
@@ -114,8 +116,6 @@ class Convermax extends Module
 					return $this->displayError($this->l('Enter URL'));
 				Configuration::updateValue('CONVERMAX_URL', $url);
 				return $this->displayConfirmation($this->l('Configuration updated'));
-			}
-			return $this->displayError($this->l('Choose file'));
 		}
 	}
 
@@ -236,8 +236,13 @@ class Convermax extends Module
 			$cm_message = 'nothing found';
 		elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
 		{
-			$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
-			$original_query = $search['cm_result']->Corrections[0]->Replace;
+			if (!empty($search['cm_result']->Corrections[0]->Replace))
+			{
+				$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
+				$original_query = $search['cm_result']->Corrections[0]->Replace;
+			}
+			else
+				$cm_message = 'nothing found';
 		}
 		else
 			$cm_message = false;
