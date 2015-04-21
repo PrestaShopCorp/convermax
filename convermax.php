@@ -55,7 +55,7 @@ class Convermax extends Module
 		|| !$this->registerHook('actionPaymentConfirmation')
 		|| !function_exists('curl_init'))
 			return false;
-		Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2');
+		Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21');
 		return true;
 	}
 
