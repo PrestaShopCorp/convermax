@@ -24,8 +24,8 @@
 *}
 <script type="text/javascript">
     var cm_query = '{$query|escape:'html':'UTF-8'}';
-    cm_params.page = '{$pagenumber|escape:'intval'}';
-    cm_params.size = '{$pagesize|escape:'intval'}';
+    cm_params.page = '{$pagenumber|escape:'html':'UTF-8'}';
+    cm_params.size = '{$pagesize|escape:'html':'UTF-8'}';
     {if isset($facets_params) && $facets_params}
         {$facets_params|escape:'quotes':'UTF-8'}
     {/if}
