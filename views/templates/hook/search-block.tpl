@@ -22,28 +22,13 @@
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of CONVERMAX CORP
 *}
-<script type="text/javascript">
-    var cm_query = '{$query|escape:'html':'UTF-8'}';
-    cm_params.page = '{$pagenumber|escape:'html':'UTF-8'}';
-    cm_params.size = '{$pagesize|escape:'html':'UTF-8'}';
-    {if isset($facets_params) && $facets_params}
-        {$facets_params|escape:'quotes':'UTF-8'}
-    {/if}
-</script>
-<div class="block">
-    <h4 class="title_block">{l s='Refine your search' mod='convermax'}</h4>
-</div>
-<div class="block">
-  <div id="cm_selected_facets" class="list-block"></div>
-</div>
-
-<div class="block">
-  <div id="cm_facets" class="list-block">
-    <div id="facets_block">
-      {include file="./facet.tpl"}
-    </div>
-  </div>
-</div>  
-<div id="cm_ajax_container" style="display: none;">
-    <div class="cm_ajax_loader"><img src="{$img_ps_dir|escape:'html':'UTF-8'}loader.gif" alt="" /><br />{l s='Loading...' mod='convermax'}</div>
+<div id="cm_search_block_top" class="col-sm-4 clearfix">
+    <form id="cm_searchbox" method="get" action="{$cm_search_url|escape:'html':'UTF-8'}" >
+        <input type="hidden" name="orderby" value="position" />
+        <input type="hidden" name="orderway" value="desc" />
+        <input class="search_query form-control" type="text" id="cm_search_query_top" name="search_query" placeholder="{l s='Search' mod='convermax'}" value="{$search_query|escape:'htmlall':'UTF-8'|stripslashes}" />
+        <button type="submit" name="cm_submit_search" class="btn btn-default button-search">
+            <span>{l s='Search' mod='convermax'}</span>
+        </button>
+    </form>
 </div>

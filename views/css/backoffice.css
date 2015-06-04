@@ -44,3 +44,5 @@
 
 .showconnectionform, .hideconnectionform { font-size: 10px; display: block; padding-bottom: 10px;}
 .showconnectionform {width: 250px;}
+
+.indexed { font-size: 16px; color: #00032b;}

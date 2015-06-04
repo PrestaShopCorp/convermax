@@ -28,6 +28,7 @@ if (!defined('_PS_VERSION_'))
 	exit;
 
 require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
+require_once(_PS_MODULE_DIR_.'convermax/classes/Cmsearch.php');
 
 class Convermax extends Module
 {
@@ -49,13 +50,21 @@ class Convermax extends Module
 
 	public function install()
 	{
-		if (!parent::install() || !$this->registerHook('leftColumn') || !$this->registerHook('header') || !$this->registerHook('backOfficeHeader')
+		if (!parent::install()
+		|| !$this->registerHook('leftColumn')
+		|| !$this->registerHook('header')
+		|| !$this->registerHook('backOfficeHeader')
+		|| !$this->registerHook('top')
 		|| !$this->registerHook('productTab')
 		|| !$this->registerHook('actionCartSave')
 		|| !$this->registerHook('actionPaymentConfirmation')
-		|| !function_exists('curl_init'))
+		|| !$this->registerHook('actionProductAdd')
+		|| !$this->registerHook('actionProductUpdate')
+		|| !$this->registerHook('actionProductDelete')
+		|| !function_exists('curl_init')
+		|| !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21')
+		|| !$this->addTab())
 			return false;
-		Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21');
 		return true;
 	}
 
@@ -65,70 +74,44 @@ class Convermax extends Module
 			return false;
 		Configuration::deleteByName('CONVERMAX_URL');
 		Configuration::deleteByName('CONVERMAX_CERT');
+		$this->removeTab();
 		return true;
+	}
+
+	public function addTab()
+	{
+		$tab = new Tab();
+
+		foreach (Language::getLanguages(false) as $language)
+			$tab->name[$language['id_lang']] = 'Convermax search';
+
+		$tab->class_name = 'ConvermaxAdmin';
+		$tab->module = $this->name;
+		$tab->id_parent = 0;
+
+		return $tab->save();
+	}
+
+	public function removeTab()
+	{
+		$tab = new Tab(Tab::getIdFromClassName('ConvermaxAdmin'));
+		return $tab->delete();
 	}
 
 	public function getContent()
 	{
-		$this->context->smarty->assign(array(
-			'url' => Configuration::get('CONVERMAX_URL'),
-			'module_dir' => $this->_path,
-		));
-		return $this->postProcess().$this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/configuration.tpl');
+		Tools::redirectAdmin('index.php?controller=ConvermaxAdmin&token='.
+			md5(pSQL(_COOKIE_KEY_.'ConvermaxAdmin'.(int)Tab::getIdFromClassName('ConvermaxAdmin').(int)$this->context->cookie->id_employee)));
 	}
 
-	public function postProcess()
+	public function getPath()
 	{
-		if (Tools::getValue('success'))
-		{
-			if (Tools::getValue('success') === 'true')
-				return $this->displayConfirmation($this->l('Configuration updated'));
-			else
-				return $this->displayError($this->l('An error occurred while attempting to get certificate.'));
-		}
-		if (Tools::getValue('cm_token'))
-		{
-			$convermax = new ConvermaxAPI();
-			if ($convermax->getCertificate(Tools::getValue('cm_token')))
-			{
-				if ($convermax->getHash())
-					if ($convermax->createIndexFields())
-						Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&success=true&configure=convermax&token='.Tools::getValue('token'));
-			}
-			Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&success=false&configure=convermax&token='.Tools::getValue('token'));
-		}
-		if (Tools::isSubmit('submitModule'))
-		{
-			if (isset($_FILES['cert'])
-				&& isset($_FILES['cert']['tmp_name'])
-				&& !empty($_FILES['cert']['tmp_name']))
-			{
-				if (!stristr(Tools::substr($_FILES['cert']['name'], -4), '.pem'))
-					return $this->displayError($this->l('Invalid file'));
-				else
-					Configuration::updateValue('CONVERMAX_CERT', Tools::file_get_contents($_FILES['cert']['tmp_name']));
-			}
-				if (stristr(Tools::substr(Tools::getvalue('url'), -1), '/'))
-					$url = Tools::substr(Tools::getvalue('url'), 0, -1);
-				else
-					$url = Tools::getvalue('url');
-				if (!$url)
-					return $this->displayError($this->l('Enter URL'));
-				Configuration::updateValue('CONVERMAX_URL', $url);
-				return $this->displayConfirmation($this->l('Configuration updated'));
-		}
+		return $this->_path;
 	}
 
-	public function hookLeftColumn()
+	public function getLocalPath()
 	{
-		if (get_class($this->context->controller) == 'SearchController')
-		{
-			$this->context->smarty->assign(array(
-				'pagesize' => abs((int)Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE')))
-			));
-			return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
-		}
-		return '';
+		return $this->local_path;
 	}
 
 	public function hookHeader()
@@ -138,9 +121,32 @@ class Convermax extends Module
 		$this->context->controller->addJS($this->_path.'/views/js/convermax.js');
 		$this->context->controller->addCSS($this->_path.'/views/css/convermax.css');
 
-		if (get_class($this->context->controller) == 'SearchController')
+		if (get_class($this->context->controller) == 'ConvermaxSearchModuleFrontController')
 			$this->context->controller->addJS($this->_path.'/views/js/convermax-search.js');
+
+		$cm_search_url = $this->context->link->getModuleLink('convermax', 'search');
+		$this->context->smarty->assign('cm_search_url', $cm_search_url);
+
 		Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
+		Media::addJsDef(array('cm_search_url' => $cm_search_url));
+	}
+
+	public function hookTop()
+	{
+		$this->context->smarty->assign('search_query', (string)Tools::getValue('search_query'));
+		return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
+	}
+
+	public function hookLeftColumn()
+	{
+		if (get_class($this->context->controller) == 'ConvermaxSearchModuleFrontController')
+		{
+			$this->context->smarty->assign(array(
+				'pagesize' => abs((int)Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE')))
+			));
+			return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
+		}
+		return '';
 	}
 
 	public function hookProductTab($params)
@@ -201,78 +207,19 @@ class Convermax extends Module
 		$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
 	}
 
-	public function ajaxCall()
+	public function hookActionProductAdd($params)
 	{
-		$query = Tools::getValue('search_query');
-
-		$original_query = $query;
-		$query = Tools::replaceAccentedChars(urldecode($query));
-
-		$srch_cntrl = Controller::getController('SearchController');
-		$srch_cntrl->productSort();
-		$srch_cntrl->n = abs((int)Tools::getValue('n', (isset($srch_cntrl->context->cookie->nb_item_per_page) ?
-			(int)$srch_cntrl->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE'))));
-		$srch_cntrl->p = abs((int)Tools::getValue('p', 1));
-
-		$facets = Tools::getValue('cm_select');
-
-		$search = Search::find($this->context->language->id, $query, $srch_cntrl->p, $srch_cntrl->n, $srch_cntrl->orderBy,
-			$srch_cntrl->orderWay, false, true, null, $facets);
-
-		$position = 1;
-		foreach ($search['result'] as &$product)
-		{
-			$product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'].
-				'&pid='.(int)$product['id_product'].'&position='.$position.'&page='.$srch_cntrl->p.'&num='.$srch_cntrl->n;
-			$position++;
-		}
-
-		Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
-		$nbProducts = $search['total'];
-		$srch_cntrl->pagination($nbProducts);
-		$srch_cntrl->addColorsToProductList($search['result']);
-
-		if (stripos($search['cm_result']->State, 'nothing'))
-			$cm_message = 'nothing found';
-		elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
-		{
-			if (!empty($search['cm_result']->Corrections[0]->Replace))
-			{
-				$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
-				$original_query = $search['cm_result']->Corrections[0]->Replace;
-			}
-			else
-				$cm_message = 'nothing found';
-		}
-		else
-			$cm_message = false;
-
-		$this->context->smarty->assign(array(
-			'products' => $search['result'], // DEPRECATED (since to 1.4), not use this: conflict with block_cart module
-			'search_products' => $search['result'],
-			'nbProducts' => $search['total'],
-			'search_query' => $original_query,
-			'instant_search' => $srch_cntrl->instant_search,
-			'cm_message' => $cm_message,
-			'homeSize' => Image::getSize(ImageType::getFormatedName('home'))));
-
-		$list = $this->context->smarty->fetch(_PS_MODULE_DIR_.'convermax/views/templates/hook/search.tpl');
-
-		$this->context->smarty->assign(array(
-			'facets' => $search['cm_result']->Facets,
-			'query' => $search['cm_result']->Query,
-			'pagenumber' => $srch_cntrl->p,
-			'pagesize' => $srch_cntrl->n,
-		));
-
-		$facets = $this->context->smarty->fetch(_PS_MODULE_DIR_.'convermax/views/templates/hook/facet.tpl');
-
-		$vars = array(
-			'productList' => utf8_encode($list),
-			'facets' => $facets,
-			'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false
-		);
-
-		return Tools::jsonEncode($vars);
+		Cmsearch::indexation($params['id_product'], false);
 	}
+
+	public function hookActionProductUpdate($params)
+	{
+		Cmsearch::indexation($params['id_product'], true);
+	}
+
+	public function hookActionProductDelete($params)
+	{
+		Cmsearch::deleteProduct($params['id_product']);
+	}
+
 }

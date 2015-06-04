@@ -81,6 +81,8 @@ function onPlayerPercent(e) {
 }
 ////
 
+setInterval(checkIndexStatus, 5000);
+
 $(document).ready(function() {
     $("a.gallery").fancybox({
         beforeLoad: function () {
@@ -109,5 +111,36 @@ $(document).ready(function() {
         e.preventDefault();
         $(".connectionform").css('display', 'none');
         $(".connectionbutton").css('display', 'block');
+    });
+    $("#reindex").click(function(e){
+        //e.preventDefault();
+        $.ajax({
+            //method: "POST",
+            url: $(this).attr('data-url'),
+            //data: { action: value },
+            success: function () {
+                $(this).attr('disabled','disabled');
+            }
+        });
     })
 });
+
+function checkIndexStatus() {
+    $.ajax({
+        //method: "POST",
+        url: $("#indexation").attr('data-url'),
+        //data: { action: value },
+        success: function (result) {
+            //result = JSON.parse(result);
+            if(result.InProgress == true) {
+                $("#reindex").attr('disabled','disabled');
+                $("#indexation").css('display', 'block');
+                $("#total_items").text(result.TotalEntries);
+                $("#current_item").text(result.CurrentEntry);
+            } else {
+                $("#reindex").removeAttr('disabled');
+                $("#indexation").css('display', 'none');
+            }
+        }
+    });
+}

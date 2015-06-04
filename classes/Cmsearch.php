@@ -1,86 +1,45 @@
 <?php
 /**
-* 2015 CONVERMAX CORP
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Open Software License (OSL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/osl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to info@convermax.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author    CONVERMAX CORP <info@convermax.com>
-*  @copyright 2015 CONVERMAX CORP
-*  @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
-*  International Registered Trademark & Property of CONVERMAX CORP
-*/
+ * 2015 CONVERMAX CORP
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to info@convermax.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author    CONVERMAX CORP <info@convermax.com>
+ *  @copyright 2015 CONVERMAX CORP
+ *  @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *  International Registered Trademark & Property of CONVERMAX CORP
+ */
 
-if (Module::isInstalled('convermax'))
-	require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
-
-class Search extends SearchCore
+class Cmsearch
 {
-	public static function indexation($full = false, $id_product = false)
+	public static function indexation($id_product = false, $update = false)
 	{
-		$db = Db::getInstance();
-
-		if ($id_product)
-			$full = false;
-
-		if ($full)
-		{
-			$db->execute('TRUNCATE '._DB_PREFIX_.'search_index');
-			$db->execute('TRUNCATE '._DB_PREFIX_.'search_word');
-			ObjectModel::updateMultishopTable('Product', array('indexed' => 0));
-		}
-		else
-		{
-			$products = $db->executeS('
-				SELECT p.id_product
-				FROM '._DB_PREFIX_.'product p
-				'.Shop::addSqlAssociation('product', 'p').'
-				WHERE product_shop.visibility IN ("both", "search")
-				AND product_shop.`active` = 1
-				AND '.($id_product ? 'p.id_product = '.(int)$id_product : 'product_shop.indexed = 0'));
-
-			$ids = array();
-			if ($products)
-				foreach ($products as $product)
-					$ids[] = (int)$product['id_product'];
-			if (count($ids))
-			{
-				$db->execute('DELETE FROM '._DB_PREFIX_.'search_index WHERE id_product IN ('.implode(',', $ids).')');
-				ObjectModel::updateMultishopTable('Product', array('indexed' => 0), 'a.id_product IN ('.implode(',', $ids).')');
-			}
-		}
-
-		$languages = Language::getLanguages();
-		$languages_count = count($languages);
-		for ($i = 0; $i < $languages_count; $i++)
-		{
-			if ($languages[$i]['iso_code'] == 'en')
-			{
-				$id_lang = $languages[$i]['id_lang'];
-				break;
-			}
-			else
-				return false;
-		}
+		$id_lang = Cmsearch::getLangId();
 
 		$convermax = new ConvermaxAPI();
-		if (!$convermax->batchStart(!$full))
-			return false;
-		while ($products = Search::getProductsToIndex($id_lang, $id_product, 50))
+		if (!$id_product)
 		{
+			if (!$convermax->batchStart())
+				return false;
+		}
+		$k = 0;
+		while ($products = Cmsearch::getProductsToIndex($id_lang, $id_product, $k, 50))
+		{
+			$k = $k + 50;
 			if (count($products) == 0)
 				break;
 			$products_array = array();
@@ -97,6 +56,11 @@ class Search extends SearchCore
 						$products[$i][$f_name] = $feature['value'];
 					}
 					unset($products[$i]['features']);
+				}
+				foreach ($products[$i] as $key => $val)
+				{
+					if (is_array($val))
+						unset($products[$i][$key]);
 				}
 
 				$img_id = Product::getCover($products[$i]['id_product']);
@@ -119,13 +83,33 @@ class Search extends SearchCore
 				if (!in_array($products[$i]['id_product'], $products_array))
 					$products_array[] = (int)$products[$i]['id_product'];
 			}
-
-			if (!$convermax->batchAdd($products))
+			if ($update)
+			{
+				if (!$convermax->update($products))
+					return false;
+			}
+			elseif ($id_product)
+			{
+				if (!$convermax->add($products))
+					return false;
+			}
+			elseif (!$convermax->batchAdd($products))
 				return false;
-
-			Search::setProductsAsIndexed($products_array);
+			if ($id_product)
+				break;
 		}
-		if (!$convermax->batchEnd())
+		if (!$id_product)
+		{
+			if (!$convermax->batchEnd())
+				return false;
+		}
+		return true;
+	}
+
+	public static function deleteProduct($id_product)
+	{
+		$convermax = new ConvermaxAPI();
+		if (!$convermax->delete($id_product))
 			return false;
 		return true;
 	}
@@ -202,7 +186,7 @@ class Search extends SearchCore
 		return array('total' => $total,'result' => $result_properties, 'cm_result' => $search_results);
 	}
 
-	protected static function getProductsToIndex($id_lang, $id_product = false, $limit = 50)
+	public static function getProductsToIndex($id_lang, $id_product = false, $start, $limit)
 	{
 		$sql = 'SELECT p.*, product_shop.*, pl.* , m.`name` AS manufacturer_name, s.`name` AS supplier_name
 				FROM `'._DB_PREFIX_.'product` p
@@ -213,11 +197,47 @@ class Search extends SearchCore
 				WHERE pl.`id_lang` = '.(int)$id_lang.
 			' AND product_shop.visibility IN ("both", "search")
 			'.($id_product ? 'AND p.id_product = '.(int)$id_product : '').'
-			AND product_shop.indexed = 0
 			AND product_shop.`active` = 1
-			LIMIT '.(int)$limit;
+			ORDER BY p.id_product ASC
+			'.($id_product ? '' : 'LIMIT '.(int)$start.','.(int)$limit);
 
 		$products = Db::getInstance()->executeS($sql);
 		return Product::getProductsProperties($id_lang, $products);
+	}
+
+	public static function getProductsCount()
+	{
+		$id_lang = Cmsearch::getLangId();
+
+		$sql = 'SELECT COUNT(*)
+				FROM `'._DB_PREFIX_.'product` p
+				'.Shop::addSqlAssociation('product', 'p').'
+				LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (p.`id_product` = pl.`id_product` '.Shop::addSqlRestrictionOnLang('pl').')
+				LEFT JOIN `'._DB_PREFIX_.'manufacturer` m ON (m.`id_manufacturer` = p.`id_manufacturer`)
+				LEFT JOIN `'._DB_PREFIX_.'supplier` s ON (s.`id_supplier` = p.`id_supplier`)
+				WHERE pl.`id_lang` = '.(int)$id_lang.
+			' AND product_shop.visibility IN ("both", "search")
+			AND product_shop.`active` = 1
+			ORDER BY p.id_product ASC';
+
+		$products = Db::getInstance()->executeS($sql);
+		return $products[0]['COUNT(*)'];
+	}
+
+	public static function getLangId()
+	{
+		$languages = Language::getLanguages();
+		$languages_count = count($languages);
+		for ($i = 0; $i < $languages_count; $i++)
+		{
+			if ($languages[$i]['iso_code'] == 'en' || $languages[$i]['iso_code'] == 'gb')
+			{
+				$id_lang = $languages[$i]['id_lang'];
+				break;
+			}
+			else
+				$id_lang = 1;
+		}
+		return $id_lang;
 	}
 }
