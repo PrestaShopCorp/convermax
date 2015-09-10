@@ -126,9 +126,9 @@ form#cm_searchbox .button.button-small i {
 .clear-all { font-weight:bold; cursor:pointer;}
 
 .cm_facet label { color:#777777;}
-.block .list-block #facets_block li {padding: 0px 0 0px 20px; border-top:none;}
-.block .list-block #facets_block li input { vertical-align:middle;}
-.block .list-block #facets_block li div.checker span { top:0;}
+.cm_block .list-block #facets_block li {padding: 0px 0 0px 20px; border-top:none;}
+.cm_block .list-block #facets_block li input { vertical-align:middle;}
+.cm_block .list-block #facets_block li div.checker span { top:0;}
 
 .slider_pad { padding:0 20px;}
 #searchbox input.search_query { font-size:18px;}

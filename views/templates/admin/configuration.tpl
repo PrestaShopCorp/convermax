@@ -24,7 +24,7 @@
 *}
 <style>
   .nobootstrap { min-width:720px !important;}
-</style>  
+</style>
   <div class="cm-config-wrapper">
     <div class="cm-config-content">
       <div class="header">
@@ -35,7 +35,7 @@
           <div class="videoblock">
             <div id="player"></div>
             <h1>  {l s='Advanced Site Search' mod='convermax'}</h1>
-            <p>{l s='83%% of online shoppers turn to site search to find what they want. Offer an advanced site search experience, so poor results don’t cause shoppers to abandon your online store.' mod='convermax'}</p>
+            <p>{l s='83% of online shoppers turn to site search to find what they want. Offer an advanced site search experience, so poor results don’t cause shoppers to abandon your online store.' mod='convermax'}</p>
             <p>{l s='Affordable whether you have 100 SKUs or millions.' mod='convermax'}</p>
             <p>{l s='We help walk you through the process to get up and running with our module.' mod='convermax'}</p>
           </div>
@@ -105,15 +105,18 @@
           </div>
       {else}
           <div class="indexed">
-              <p>indexed products {$indexed_items}/{$total_items}</p>
+              <p>Indexed products: <span id="indexed_items">{$indexed_items}</span>{*/{$total_items}*}</p>
+          </div>
+          <div class="indexed">
+              <p>Cron URL: {$cron_url}</p>
           </div>
           <div>
-             <p><input type="button" data-url="index.php?controller=ConvermaxAdmin&reindex=true&token={$token}" id="reindex" value="Reindex"></p>
+             <p><input type="button" data-url="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}&reindex=true" id="reindex" value="Reindex"></p>
           </div>
-          <div id="indexation" data-url="{$status_url}" style="display: none">
+          {*<div id="indexation" style="display: none">
               indexation in progress. Current:  <span id="current_item"></span> Sended: <span id="total_items"></span>
-          </div>
-          <div class="rcol">
+          </div>*}
+          <div class="configure">
               <div class="connectionform" style="display:none">
                   <a class="hideconnectionform" href="#">{l s='Hide connection form' mod='convermax'}</a>
                   <h3> {l s='Have your connection info?' mod='convermax'}  <br>{l s='Configure it now' mod='convermax'}</h3>

@@ -21,11 +21,11 @@
 .cm-config-wrapper h1 { padding:10px 0px 20px 0px; margin:0; line-height:1; font-size:24px;}
 .cm-config-wrapper h3 { padding:0 0 20px 0; margin:0; text-align:center;}
 
-.featuresblock .rcol .connectionform, .featuresblock .rcol .connectionbutton { background:#e7e7e7; padding:20px; }
+.featuresblock .rcol .connectionform, .featuresblock .rcol .connectionbutton, .configure { background:#e7e7e7; padding:20px; }
 .nobootstrap .connectionform label { /*width:40px;*/ padding:0 10px 0 0; text-shadow:none; color:#00032b; font-weight:normal; text-align:left;}
 .nobootstrap .connectionform input { font-size:13px; text-align:left; width:95%; font-family: "Open Sans",Helvetica,Arial,sans-serif;}
 .nobootstrap .connectionform div { padding:0 0 10px 0;}
-.nobootstrap .connectionform input[type=submit], .nobootstrap .connectionbutton input[type=button] {background-color: white;  box-shadow: 0 0 0 2px #84a520 inset;  color: #84a520;
+.nobootstrap .connectionform input[type=submit], .nobootstrap .connectionbutton input[type=button], #reindex {background-color: white;  box-shadow: 0 0 0 2px #84a520 inset;  color: #84a520;
     padding-left: 28px;    padding-right: 28px; display: inline-block;    font-size: 18px;    line-height: 40px;    padding: 0 20px;    position: relative;
     text-rendering: optimizelegibility;    transition: all 0.3s ease 0s; border:none; width:auto; text-align:center;}
 .nobootstrap .connectionform input[type=submit]:hover, .nobootstrap .connectionbutton input[type=button]:hover {background-color: #84a520; color: #dff69a;}

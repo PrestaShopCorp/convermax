@@ -37,7 +37,7 @@ class ConvermaxAPI
 		if (stristr(Tools::substr($url, -1), '/'))
 			$url = Tools::substr($url, 0, -1);
 		$this->url = $url;
-		$this->cert = Configuration::get('CONVERMAX_CERT') ? $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT')) : false;
+		$this->cert = $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT'));
 		if (preg_match('|(.*?://api\.convermax\.com/.*?)/.*|', $url, $matches))
 			$this->base_url = $matches[1];
 		else
@@ -52,14 +52,16 @@ class ConvermaxAPI
 
 	public function batchStart()
 	{
-		$url = $this->url.'/batchupdate/start?incremental=false';
+		if ($this->inProgress())
+            return false;
+        $url = $this->url.'/batchupdate/start?incremental=false';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
 		$data = curl_exec($ch);
-		if (curl_errno($ch))
+		if (curl_errno($ch) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 204)
 			return false;
 		unset($data);
 		return true;
@@ -122,7 +124,9 @@ class ConvermaxAPI
 
 	public function add($items)
 	{
-		$url = $this->url.'/update/add?incremental=true';
+        if ($this->inProgress())
+            return false;
+        $url = $this->url.'/update/add?incremental=true';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -142,7 +146,9 @@ class ConvermaxAPI
 
 	public function update($items)
 	{
-		$url = $this->url.'/update/update';
+        if ($this->inProgress())
+            return false;
+        $url = $this->url.'/update/update';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -162,7 +168,9 @@ class ConvermaxAPI
 
 	public function delete($items)
 	{
-		$url = $this->url.'/update/deletebymask';
+        if ($this->inProgress())
+            return false;
+        $url = $this->url.'/update/deletebymask';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -180,7 +188,7 @@ class ConvermaxAPI
 		return true;
 	}
 
-	public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
+	public function search_curl($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
 	{
 		if ($order_by == 'position')
 		{
@@ -214,10 +222,87 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
+        if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200)
+            return false;
 		return Tools::jsonDecode($data);
 	}
+
+    public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
+    {
+        if ($order_by == 'position')
+        {
+            $order_by = false;
+            $order_desc = false;
+        }
+        $url = $this->url.'/search/json?query='.urlencode($query);
+        $url .= '&page='.$page_number.'&pagesize='.$page_size;
+        if ($facets)
+        {
+            $i = 0;
+            foreach ($facets as $key => $val)
+            {
+                $url .= '&facet.'.$i.'.field='.urlencode($key);
+                foreach ($val as $v)
+                    $url .= '&facet.'.$i.'.selection='.urlencode($v);
+                $i++;
+            }
+        }
+
+        if ($order_by)
+            $url .= '&sort.0.fieldname='.$order_by.($order_desc ? '&sort.0.descending=true' : '');
+        $url .= '&analytics.userid='.$this->getCookie('cmuid');
+        $url .= '&analytics.sessionid='.$this->getCookie('cmsid');
+        $url .= '&analytics.useragent='.urlencode($_SERVER['HTTP_USER_AGENT']);
+        $url .= '&analytics.userip='.$_SERVER['REMOTE_ADDR'];
+        if (Tools::getValue('searchfeatures'))
+            $url .= '&analytics.eventparams.searchfeatures='.Tools::getValue('searchfeatures');
+
+        $url = str_replace('https://', 'http://', $url);
+        $request = "GET $url HTTP/1.1\r\n".
+            "Accept:*/*\r\n".
+            "Accept-Encoding:gzip, deflate\r\n".
+            "Host:api.convermax.com\r\n".
+            "User-Agent:Convermax Prestashop\r\n\r\n";
+
+        if(!$fp = pfsockopen('192.99.149.223', 80))
+            return false;
+        if(!fwrite($fp, $request))
+        {
+            fclose($fp);
+            if (!$fp = pfsockopen('192.99.149.223', 80))
+                return false;
+            if(!fwrite($fp, $request))
+            {
+                fclose($fp);
+                return false;
+            }
+        }
+        $data = '';
+        while (true)
+        {
+            $buf = '';
+            $buf = fgets($fp);
+            if(stripos($buf, 'content-length')!== false)
+            {
+                $lenght = explode(':', $buf);
+                $lenght = trim($lenght[1]);
+            }
+            if($buf == "\r\n" || empty($buf))
+                break;
+        }
+        if(isset($lenght))
+        {
+            for ($i = 0; $i < $lenght; $i++)
+                $data .= fread($fp, 1);
+        }
+        $data = Tools::jsonDecode(gzinflate(substr($data, 10)));
+
+        if(isset($data->TotalHits))
+            return $data;
+        return false;
+    }
 
 	public function autocomplete($query)
 	{
@@ -230,16 +315,16 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
-		if (curl_errno($ch))
+		if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200)
 			return false;
 		return $data;
 	}
 
 	public function track($event_type, $event_params)
 	{
-		if (!$this->cert)
+		if (!$this->cert || !$this->getCookie('cmuid') || $this->getCookie('cmsid'))
 			return true;
 		$params = array(
 			'EventType' => $event_type,
@@ -289,7 +374,7 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		$data = curl_exec($ch);
-		if (curl_errno($ch) || empty($data))
+		if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 201)
 			return false;
 		Configuration::updateValue('CONVERMAX_CERT', $data);
 		file_put_contents($this->cert, $data);
@@ -299,14 +384,14 @@ class ConvermaxAPI
 	public function getHash()
 	{
 		$name = urlencode(Configuration::get('PS_SHOP_NAME'));
-		$url = $this->base_url.'/scheme/create?name='.$name;
+		$url = $this->base_url.'/scheme/create?name='.$name.'&template=prestashop';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		$data = curl_exec($ch);
-		if (curl_errno($ch) || empty($data))
+		if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200)
 			return false;
 		$this->url = $this->base_url.'/'.str_replace('"', '', $data);
 		Configuration::updateValue('CONVERMAX_URL', $this->url);
@@ -315,18 +400,24 @@ class ConvermaxAPI
 
 	public function createIndexFields()
 	{
-		$properties = array();
+		/*$properties = array();
 		$properties[0] = Product::getProductProperties(5, array('id_product'=>1));
 		if ($properties[0]['features'])
 		{
 			foreach ($properties[0]['features'] as $feature)
 				$properties[0][$feature['name']] = $feature['value'];
 			unset($properties[0]['features']);
-		}
+		}*/
+
+        $fields = Cmsearch::getFields();
+
+        foreach ($fields as $key => $val)
+            $s_fields[$this->sanitize(($key))] = '';
+
 		$url = $this->url.'/scheme/createfields?catalog=catalog';
 		$ch = curl_init($url);
 		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($properties));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($s_fields));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -357,13 +448,29 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		//curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 		$data = curl_exec($ch);
 		if (curl_errno($ch))
 			return false;
 		$data = Tools::jsonDecode($data);
 		$items_in_index = 'ItemsInIndex';
-		return $data->{$items_in_index}->Actual;
+		return isset($data->{$items_in_index}->Actual) ? (int)$data->{$items_in_index}->Actual : 0;
 	}
+
+    public function inProgress()
+    {
+        $url = $this->url.'/indexing/status/json';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+        $data = curl_exec($ch);
+        if (curl_errno($ch))
+            return false;
+        $data = Tools::jsonDecode($data);
+        $in_progress = 'InProgress';
+        return $data->{$in_progress};
+    }
 
 }

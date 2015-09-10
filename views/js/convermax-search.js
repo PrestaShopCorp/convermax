@@ -25,6 +25,7 @@
 var cm_params = {
 	facets: {},
 	sliders: {},
+    sliders_display: {},
 	trees: {},
 	facets_display: {},
 	page: '',
@@ -81,7 +82,7 @@ var cm_params = {
 			}
 			if (format == 'list') {
 				if (this.sliders[keys[i]][0] != this.sliders[keys[i]][1]) {
-					data += '<li><span onclick="cm_params.ResetSlider(\'' + keys[i] + '\', \'' + this.sliders[keys[i]][1] + '\');cm_reload();">[x]</span>' + keys[i] + ' - ' + this.sliders[keys[i]][0] + '</li>';
+					data += '<li><span onclick="cm_params.ResetSlider(\'' + keys[i] + '\', \'' + this.sliders[keys[i]][1] + '\');cm_reload();">[x]</span>' + this.sliders_display[keys[i]] + ' - ' + this.sliders[keys[i]][0] + '</li>';
 				}
 			}
 		}
@@ -141,33 +142,35 @@ $(document).ready(function()
 		cm_reload();
 	});
 
-
 	cm_initSliders();
 	cm_initTrees();
 	cm_paginationButton();
 	cm_displayCurrentSearchBlock();
 	cm_init();
 
+    $(window).resize(cm_resize);
 });
 
 function cm_initSliders() {
 	$('.cm_slider').each(function() {
 		cm_params.sliders[this.dataset.fieldname][1] = this.dataset.range;
-		var r = /\[(.*) TO (.*)\]/i;
+		cm_params.sliders_display[this.dataset.fieldname] = this.dataset.displayname;
+		var dollar = (this.dataset.fieldname == 'price') ? '$' : '';
+        var r = /\[(.*) TO (.*)\]/i;
 		var v = r.exec(this.dataset.range);
 		var s = r.exec(cm_params.sliders[this.dataset.fieldname][0]);
 		var min = parseFloat(v[1]);
 		var max = parseFloat(v[2]);
 		var selectionmin = parseFloat(s[1]);
 		var selectionmax = parseFloat(s[2]);
-		var sliderinfo = $("<div>").addClass("cm_sliderinfo").html('<p>Selected: ' + selectionmin + ' to ' + selectionmax + '</p>').insertBefore($(this));
+		var sliderinfo = $("<div>").addClass("cm_sliderinfo").html('<p>Selected: '+ dollar + selectionmin + ' to ' + dollar + selectionmax + '</p>').insertBefore($(this));
 		$(this).slider({
 			range: true,
 			min: min,
 			max: max,
 			values: [selectionmin, selectionmax],
 			slide: function (e, ui) {
-				sliderinfo.html('<p>Selected: ' + ui.values[0] + ' to ' + ui.values[1] + '</p>');
+				sliderinfo.html('<p>Selected: ' + dollar + ui.values[0] + ' to ' + dollar + ui.values[1] + '</p>');
 			},
 			change: function (e, ui) {
 				var newselection = '[' + ui.values[0] + ' TO ' + ui.values[1] +']';
@@ -250,7 +253,7 @@ function cm_reload(params) {
 	if (cm_params.orderby) {
 		request += '&orderby=' + encodeURIComponent(cm_params.orderby) + '&orderway=' + cm_params.orderway;
 	}
-	if (typeof params != 'undefined' && typeof params.searchfeatures != 'undesined') {
+	if (typeof params != 'undefined' && typeof params.searchfeatures != 'undefined') {
 		request += '&searchfeatures=' + params.searchfeatures;
 	}
 
@@ -284,19 +287,6 @@ function cm_reload(params) {
 				cm_initTrees();
 				ajaxLoaderOn = 0;
 
-				$('div.pagination form').on('submit', function(e)
-				{
-					e.preventDefault();
-					val = $('div.pagination select[name=n]').val();
-
-					$('div.pagination select[name=n]').children().each(function(it, option) {
-						if (option.value == val)
-							$(option).attr('selected', true);
-						else
-							$(option).removeAttr('selected');
-					});
-					cm_reload();
-				});
 
 				if (typeof display != 'undefined' && display instanceof Function) {
 					var view = $.totalStorage('display');
@@ -342,34 +332,63 @@ function cm_paginationButton() {
 }
 
 
-function cm_init()
-{
+function cm_init() {
 	$("#cm_facets input[type='checkbox'], select.form-control").uniform();
+    cm_resize();
+    $('div.pagination form').on('submit', function(e) {
+        e.preventDefault();
+        var size = cm_params.size;
+        cm_params.size = $(this).find('input[name=n]').val();
+        cm_params.page = 1;
+        cm_reload();
+        cm_params.size = size;
+    });
 }
 
-function utf8_decode (utfstr) {
-	var res = '';
-	for (var i = 0; i < utfstr.length;) {
-		var c = utfstr.charCodeAt(i);
+function toggleList(item) {
+    if ($(item).parent().find('.cm_more_results').css('display') == 'none') {
+        $(item).parent().find('.cm_more_results').css('display', 'block');
+        $(item).text('Show less');
+    } else {
+        $(item).parent().find('.cm_more_results').css('display', 'none');
+        $(item).text('Show more');
+    }
+}
 
-		if (c < 128)
-		{
-			res += String.fromCharCode(c);
-			i++;
-		}
-		else if((c > 191) && (c < 224))
-		{
-			var c1 = utfstr.charCodeAt(i+1);
-			res += String.fromCharCode(((c & 31) << 6) | (c1 & 63));
-			i += 2;
-		}
-		else
-		{
-			var c1 = utfstr.charCodeAt(i+1);
-			var c2 = utfstr.charCodeAt(i+2);
-			res += String.fromCharCode(((c & 15) << 12) | ((c1 & 63) << 6) | (c2 & 63));
-			i += 3;
-		}
-	}
-	return res;
+function toggleFacet(item, state) {
+    switch (state) {
+        case 'show':
+            $(item).parent().find('.cm_facetbody').css('display', 'block');
+            break;
+        case 'hide':
+            $(item).parent().find('.cm_facetbody').css('display', 'none');
+            break;
+        default:
+            if ($(item).parent().find('.cm_facetbody').css('display') == 'none') {
+                $(item).parent().find('.cm_facetbody').css('display', 'block');
+            } else {
+                $(item).parent().find('.cm_facetbody').css('display', 'none');
+            }
+    }
+}
+
+function toggleBlock() {
+    //
+}
+
+function cm_resize() {
+    var state = 'show';
+    if ($(window).width() < 767) {
+        state = 'hide';
+    }
+    $('.cm_facet_title').each(function() {
+        toggleFacet(this, state);
+    });
+    $('#facets_block div.checker').each(function() {
+        $(this).css('display', 'inline');
+    });
+    $('.cm_more_results').each(function() {
+        $(this).css('display', 'none');
+        $(this).parent().find('.cm_more_link').text('Show more');
+    });
 }

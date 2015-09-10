@@ -27,23 +27,24 @@ $(document).ready(function()
 
 	getUserId();
 	getSessionId();
+    var cm_blocksearch_type = 'top';
 
 	var input = $("<input>")
 		.attr("type", "hidden")
 		.attr("name", "searchfeatures").val("QueryTyped");
-	$("#search_query_" + blocksearch_type).parent('form').append($(input));
+	$("#cm_search_query_" + cm_blocksearch_type).parent('form').append($(input));
 
 	//autocomplete part
-	$("#search_query_" + blocksearch_type).unautocomplete();
+	//$("#cm_search_query_" + cm_blocksearch_type).unautocomplete();
 
-	var width_ac_results = 	$("#search_query_" + blocksearch_type).parent('form').width();
-	if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof blocksearch_type !== 'undefined' && blocksearch_type)
+	var width_ac_results = 	$("#cm_search_query_" + cm_blocksearch_type).parent('form').width();
+	if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof cm_blocksearch_type !== 'undefined' && cm_blocksearch_type)
 
-		$("#search_query_" + blocksearch_type).autocomplete(
+		$("#cm_search_query_" + cm_blocksearch_type).autocomplete(
 
 			cm_url + '/autocomplete/json',
 			{
-				minChars: 3,
+				minChars: 2,
 				max: 12,
 				width: (width_ac_results > 0 ? width_ac_results : 500),
 				selectFirst: false,
@@ -55,7 +56,7 @@ $(document).ready(function()
 						return '<div class="autocomplete-item">' + data.Text + '</div>';
 					}
 					if (value == 'Product') {
-						return '<div class="autocomplete-item"><img src="' + data.img_link + '"><div class="autocomplete-desc">' + data.description_short + '</div></div>';
+						return '<div class="autocomplete-item"><img src="' + data.img_link + '"><div class="autocomplete-desc">' + data.name + '</div></div>';
 					}
 					if (value == 'Category') {
 						return '<div class="autocomplete-item">' + data.FacetValue + '</div>';
@@ -68,7 +69,7 @@ $(document).ready(function()
 					var mytab = new Array();
 					var displayproduct = true;
 					var displaycat = true;
-					var term = $("#search_query_" + blocksearch_type).val();
+					var term = $("#cm_search_query_" + cm_blocksearch_type).val();
 					for (var i = 0; i < data.length; i++) {
 						if (data[i].Type == 'Product' && displayproduct) {
 							mytab[mytab.length] = { data: 'Product Search:', value: 'group' };
@@ -85,20 +86,20 @@ $(document).ready(function()
 					return mytab;
 				},
 				extraParams: {
-					query: function(){return $("#search_query_" + blocksearch_type).val()}
+					query: function(){return $("#cm_search_query_" + cm_blocksearch_type).val()}
 				}
 			}
 		)
 			.result(function(event, data, formatted) {
 				var loc;
 				if (data.Type == 'Freetext') {
-					loc = cm_search_url + ((cm_search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' + data.Text + '&searchfeatures=QueryTyped';
+					loc = cm_search_url + ((cm_search_url.indexOf('?') < 0) ? '?' : '&') + 'search_query=' +encodeURIComponent(data.Text) + '&searchfeatures=QueryTyped';
 				}
 				if (data.Type == 'Product') {
 					loc = data.link;
 				}
 				if (data.Type == 'Category') {
-					loc = cm_search_url + ((cm_search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + data.FieldName + '][]=' + data.FacetValue + '&searchfeatures=FacetSelected';
+					loc = cm_search_url + ((cm_search_url.indexOf('?') < 0) ? '?' : '&') + 'cm_select[' + encodeURIComponent(data.FieldName) + '][]=' + encodeURIComponent(data.FacetValue) + '&searchfeatures=FacetSelected';
 				}
 				cmAutocomplete(data, loc);
 			});
@@ -176,7 +177,7 @@ function cmAutocomplete(item, loc) {
 		data: JSON.stringify(event),
 		dataType: 'json',
 		contentType: 'application/json',
-		success: function(result)
+        complete: function(result)
 		{
 			document.location.href = loc;
 		}

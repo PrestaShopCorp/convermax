@@ -23,27 +23,51 @@
 *  International Registered Trademark & Property of CONVERMAX CORP
 *}
 {foreach from=$facets item=facet}
+    {assign var="flag" value=false}
+    {assign var="tree_flag" value=false}
     {if $facet->Values}
         <div class="cm_facet">
-            <p class="cm_facet_title">{$facet->DisplayName|escape:'html':'UTF-8'}</p>
+            <p class="cm_facet_title" onclick="toggleFacet(this)">{$facet->DisplayName|escape:'html':'UTF-8'}</p>
             {if $facet->IsRanged}
-                <div class="slider_pad"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-range="{$facet->Values[0]->Term|regex_replace:"/ .*\]/":""} {$facet->Values[{$facet->Values|@count}-1]->Term|regex_replace:"/\[.*? /":""}"></div></div>
+                <div class="slider_pad cm_facetbody"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-range="{$facet->Values[0]->Term|regex_replace:"/ .*\]/":""} {$facet->Values[{$facet->Values|@count}-1]->Term|regex_replace:"/\[.*? /":""}"></div></div>
             {elseif $facet->IsTree}
-                <ul class="cm_tree">
+                <div class="cm_tree cm_facetbody">
+                    {counter assign=i start=0 print=false}
                     {foreach from=$facet->Values item=val}
                         {if !$val->Selected}
-                            <li><a href="#" class="cm_tree_item" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-value="{$val->Term|escape:'html':'UTF-8'}">{$val->Value|escape:'html':'UTF-8'} - ({$val->HitCount|escape:'html':'UTF-8'})</a></li>
+                            {if $i > 19 and $tree_flag == false}
+                                <div class="cm_more_results" style="display:none">
+                                {assign var="tree_flag" value=true}
+                            {/if}
+                            <div><a href="#" class="cm_tree_item" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-value="{$val->Term|escape:'html':'UTF-8'}">{$val->Value|escape:'html':'UTF-8'} ({$val->HitCount|escape:'html':'UTF-8'})</a></div>
+                            {counter}
                         {/if}
                     {/foreach}
-                </ul>
+                    {if $tree_flag == true}
+                        </div>
+                        <span class="cm_more_link" onclick="toggleList(this)">Show more</span>
+                        {assign var="tree_flag" value=false}
+                    {/if}
+                </div>
             {else}
-                    <ul>
+                    <div class="cm_facetbody">
+                    {counter assign=j start=0 print=false}
                     {foreach from=$facet->Values item=value}
-                        <li>
+                        {if $j > 19 and $flag == false}
+                            <div class="cm_more_results" style="display:none">
+                            {assign var="flag" value=true}
+                        {/if}
+                        <div>
                         <label><input type="checkbox" class="checkbox" value="{$value->Term}" data-fieldname="{$facet->FieldName}" data-displayname="{$facet->DisplayName}"{if $value->Selected} checked{/if}>{$value->Value} ({$value->HitCount})</label>
-                        </li>
+                        </div>
+                        {counter}
                     {/foreach}
-                    </ul>
+                    {if $flag == true}
+                        </div>
+                        <span class="cm_more_link" onclick="toggleList(this)">Show more</span>
+                        {assign var="flag" value=false}
+                    {/if}
+                    </div>
             {/if}
         </div>
     {/if}

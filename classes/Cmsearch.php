@@ -37,9 +37,9 @@ class Cmsearch
 				return false;
 		}
 		$k = 0;
-		while ($products = Cmsearch::getProductsToIndex($id_lang, $id_product, $k, 50))
+		while ($products = Cmsearch::getProductsToIndex($id_lang, $id_product, $k, 200))
 		{
-			$k = $k + 50;
+			$k = $k + 200;
 			if (count($products) == 0)
 				break;
 			$products_array = array();
@@ -65,8 +65,10 @@ class Cmsearch
 
 				$img_id = Product::getCover($products[$i]['id_product']);
 				$link = new Link();
-				$fix = 'http:/';
-				$products[$i]['img_link'] = $fix.'/'.$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
+				//$fix = '/';
+				//$products[$i]['img_link'] = $fix.'/'.$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
+				$products[$i]['img_link'] = str_replace(Tools::getHttpHost(), '', $link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small')));
+                $products[$i]['link'] = str_replace(Tools::getHttpHost(true), '', $products[$i]['link']);
 
 				$cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
 				$full_category = '';
@@ -133,6 +135,8 @@ class Cmsearch
 			$order_desc = false;
 
 		$search_results = $convermax->search($expr, $page_number - 1, $page_size, $facets, $order_by, $order_desc);
+        if (!$search_results)
+            return false;
 		$product_pool = '';
 		$items = 'Items';
 		foreach ($search_results->{$items} as $item)
@@ -188,7 +192,8 @@ class Cmsearch
 
 	public static function getProductsToIndex($id_lang, $id_product = false, $start, $limit)
 	{
-		$sql = 'SELECT p.*, product_shop.*, pl.* , m.`name` AS manufacturer_name, s.`name` AS supplier_name
+        Cmproduct::flushCache();
+        $sql = 'SELECT p.*, product_shop.*, pl.* , m.`name` AS manufacturer_name, s.`name` AS supplier_name
 				FROM `'._DB_PREFIX_.'product` p
 				'.Shop::addSqlAssociation('product', 'p').'
 				LEFT JOIN `'._DB_PREFIX_.'product_lang` pl ON (p.`id_product` = pl.`id_product` '.Shop::addSqlRestrictionOnLang('pl').')
@@ -240,4 +245,99 @@ class Cmsearch
 		}
 		return $id_lang;
 	}
+
+    public static function getFields()
+    {
+        $fields = array(
+            'id_product' => '',
+            'id_supplier' => '',
+            'id_manufacturer' => '',
+            'id_category_default' => '',
+            'id_shop_default' => '',
+            'id_tax_rules_group' => '',
+            'on_sale' => '',
+            'online_only' => '',
+            'ean13' => '',
+            'upc' => '',
+            'ecotax' => '',
+            'quantity' => '',
+            'minimal_quantity' => '',
+            'price' => '',
+            'wholesale_price' => '',
+            'unity' => '',
+            'unit_price_ratio' => '',
+            'additional_shipping_cost' => '',
+            'reference' => '',
+            'supplier_reference' => '',
+            'location' => '',
+            'width' => '',
+            'height' => '',
+            'depth' => '',
+            'weight' => '',
+            'out_of_stock' => '',
+            'quantity_discount' => '',
+            'customizable' => '',
+            'uploadable_files' => '',
+            'text_fields' => '',
+            'active' => '',
+            'redirect_type' => '',
+            'id_product_redirected' => '',
+            'available_for_order' => '',
+            'available_date' => '',
+            'condition' => '',
+            'show_price' => '',
+            'indexed' => '',
+            'visibility' => '',
+            'cache_is_pack' => '',
+            'cache_has_attachments' => '',
+            'is_virtual' => '',
+            'cache_default_attribute' => '',
+            'date_add' => '',
+            'date_upd' => '',
+            'advanced_stock_management' => '',
+            'pack_stock_type' => '',
+            'id_shop' => '',
+            'id_lang' => '',
+            'description' => '',
+            'description_short' => '',
+            'link_rewrite' => '',
+            'meta_description' => '',
+            'meta_keywords' => '',
+            'meta_title' => '',
+            'name' => '',
+            'available_now' => '',
+            'available_later' => '',
+            'manufacturer_name' => '',
+            'supplier_name' => '',
+            'allow_oosp' => '',
+            'id_product_attribute' => '',
+            'category' => '',
+            'link' => '',
+            'attribute_price' => '',
+            'price_tax_exc' => '',
+            'price_without_reduction' => '',
+            'reduction' => '',
+            'specific_prices' => '',
+            'quantity_all_versions' => '',
+            'id_image' => '',
+            'virtual' => '',
+            'pack' => '',
+            'nopackprice' => '',
+            'customization_required' => '',
+            'rate' => '',
+            'tax_name' => '',
+            '_CatalogName' => '',
+            'img_link' => '',
+            'category_full' => ''
+        );
+        $id_lang = Cmsearch::getLangId();
+        $sql = 'SELECT name
+				FROM `'._DB_PREFIX_.'feature_lang`
+				WHERE `id_lang` = '.(int)$id_lang;
+        $features = Db::getInstance()->executeS($sql);
+        foreach ($features as $feature)
+            $fields['f_'.$feature['name']] = '';
+
+        return $fields;
+    }
 }

@@ -29,6 +29,7 @@ if (!defined('_PS_VERSION_'))
 
 require_once(_PS_MODULE_DIR_.'convermax/ConvermaxAPI.php');
 require_once(_PS_MODULE_DIR_.'convermax/classes/Cmsearch.php');
+require_once(_PS_MODULE_DIR_.'convermax/classes/Cmproduct.php');
 
 class Convermax extends Module
 {
@@ -36,7 +37,7 @@ class Convermax extends Module
 	{
 		$this->name = 'convermax';
 		$this->tab = 'search_filter';
-		$this->version = '1.0.1';
+		$this->version = '1.2.0';
 		$this->author = 'CONVERMAX CORP';
 		$this->module_key = '0958874296fcb714c52c9a74f5fdb88f';
 
@@ -44,75 +45,146 @@ class Convermax extends Module
 
 		$this->displayName = $this->l('Convermax');
 		$this->description = $this->l('Convermax search module');
-
 		$this->confirmUninstall = $this->l('Uninstall?');
+
+        $this->registered = Configuration::get('CONVERMAX_CERT') ? true : false;
+
 	}
 
 	public function install()
 	{
-		if (!parent::install()
+		if(!function_exists('curl_init'))
+            return $this->_abortInstall($this->l('CURL is not installed'));
+
+        if (!parent::install()
 		|| !$this->registerHook('leftColumn')
 		|| !$this->registerHook('header')
 		|| !$this->registerHook('backOfficeHeader')
 		|| !$this->registerHook('top')
+		|| !$this->registerHook('displayNav')
 		|| !$this->registerHook('productTab')
 		|| !$this->registerHook('actionCartSave')
 		|| !$this->registerHook('actionPaymentConfirmation')
 		|| !$this->registerHook('actionProductAdd')
 		|| !$this->registerHook('actionProductUpdate')
 		|| !$this->registerHook('actionProductDelete')
-		|| !function_exists('curl_init')
-		|| !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21')
-		|| !$this->addTab())
+		/*|| !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21'))*/
+		|| !Configuration::updateValue('CONVERMAX_URL', 'https://rebel03_cm_services/v2')
+        || !Configuration::updateValue('CONVERMAX_CRON_KEY', Tools::passwdGen(8)))
 			return false;
 		return true;
 	}
-
+    public function removeTab()
+    {
+        $tab = new Tab(Tab::getIdFromClassName('ConvermaxAdmin'));
+        return $tab->delete();
+    }
 	public function uninstall()
 	{
 		if (!parent::uninstall())
 			return false;
 		Configuration::deleteByName('CONVERMAX_URL');
 		Configuration::deleteByName('CONVERMAX_CERT');
-		$this->removeTab();
+		Configuration::deleteByName('CONVERMAX_CRON_KEY');
 		return true;
-	}
-
-	public function addTab()
-	{
-		$tab = new Tab();
-
-		foreach (Language::getLanguages(false) as $language)
-			$tab->name[$language['id_lang']] = 'Convermax search';
-
-		$tab->class_name = 'ConvermaxAdmin';
-		$tab->module = $this->name;
-		$tab->id_parent = 0;
-
-		return $tab->save();
-	}
-
-	public function removeTab()
-	{
-		$tab = new Tab(Tab::getIdFromClassName('ConvermaxAdmin'));
-		return $tab->delete();
 	}
 
 	public function getContent()
 	{
-		Tools::redirectAdmin('index.php?controller=ConvermaxAdmin&token='.
-			md5(pSQL(_COOKIE_KEY_.'ConvermaxAdmin'.(int)Tab::getIdFromClassName('ConvermaxAdmin').(int)$this->context->cookie->id_employee)));
+
+        $this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
+        $this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
+        Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
+        //Media::addJsDef(array('healthckeck_url' => Configuration::get('CONVERMAX_URL').'/healthcheck/json'));
+
+        $this->context->smarty->assign(array(
+            'url' => Configuration::get('CONVERMAX_URL'),
+            'module_dir' => $this->_path,
+            'registered' => $this->registered
+        ));
+
+        if ($this->registered)
+        {
+            $convermax = new ConvermaxAPI();
+            $indexed_items = $convermax->getIndexedProducts();
+            $total_items = Cmsearch::getProductsCount();
+            $cron_url = $this->context->shop->getBaseURL().'modules/convermax/cron.php?key='.Configuration::get('CONVERMAX_CRON_KEY');
+
+            $this->context->smarty->assign(array(
+                'indexed_items' => $indexed_items,
+                'total_items' => $total_items,
+                'cron_url' => $cron_url
+                /*'status_url' => Configuration::get('CONVERMAX_URL').'/indexing/status/json',
+                'healthckeck_url' => Configuration::get('CONVERMAX_URL').'/healthcheck/json'*/
+            ));
+        }
+
+        return $this->postProcess().$this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/configuration.tpl');
 	}
 
-	public function getPath()
-	{
-		return $this->_path;
-	}
+    public function postProcess()
+    {
+        if (Tools::getValue('reindex') === 'true')
+        {
+            Cmsearch::indexation();
+            die();
+        }
 
-	public function getLocalPath()
-	{
-		return $this->local_path;
-	}
+        if (Tools::getValue('state'))
+        {
+            /*if (Tools::getValue('state') === 1)
+                return $this->displayConfirmation($this->l('Configuration updated'));
+            else
+                return $this->displayError($this->l('An error occurred while attempting to get certificate.'));
+            */
+            switch (Tools::getValue('state'))
+            {
+                case 1:
+                    return $this->displayConfirmation($this->l('Configuration updated'));
+                case 2:
+                    return $this->displayError($this->l('An error occurred while attempting to get certificate.'));
+                case 3:
+                    return $this->displayError($this->l('An error occurred while attempting to get hash.'));
+                case 4:
+                    return $this->displayError($this->l('An error occurred while attempting to create fields.'));
+            }
+        }
+        if (Tools::getValue('cm_token'))
+        {
+            $convermax = new ConvermaxAPI();
+            if ($convermax->getCertificate(Tools::getValue('cm_token')))
+            {
+                if ($convermax->getHash())
+                {
+                    if ($convermax->createIndexFields())
+                        Tools::redirectAdmin($_SERVER['SCRIPT_NAME'] . '?controller=AdminModules&state=1&configure=convermax&token=' . Tools::getValue('token'));
+                    Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&state=4&configure=convermax&token='.Tools::getValue('token'));
+                }
+                Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&state=3&configure=convermax&token='.Tools::getValue('token'));
+            }
+            Tools::redirectAdmin($_SERVER['SCRIPT_NAME'].'?controller=AdminModules&state=2&configure=convermax&token='.Tools::getValue('token'));
+        }
+        if (Tools::isSubmit('submitModule'))
+        {
+            if (isset($_FILES['cert'])
+                && isset($_FILES['cert']['tmp_name'])
+                && !empty($_FILES['cert']['tmp_name']))
+            {
+                if (!stristr(Tools::substr($_FILES['cert']['name'], -4), '.pem'))
+                    return $this->displayError($this->l('Invalid file'));
+                else
+                    Configuration::updateValue('CONVERMAX_CERT', Tools::file_get_contents($_FILES['cert']['tmp_name']));
+            }
+            if (stristr(Tools::substr(Tools::getvalue('url'), -1), '/'))
+                $url = Tools::substr(Tools::getvalue('url'), 0, -1);
+            else
+                $url = Tools::getvalue('url');
+            if (!$url)
+                return $this->displayError($this->l('Enter URL'));
+            Configuration::updateValue('CONVERMAX_URL', $url);
+            return $this->displayConfirmation($this->l('Configuration updated'));
+        }
+    }
 
 	public function hookHeader()
 	{
@@ -132,10 +204,44 @@ class Convermax extends Module
 	}
 
 	public function hookTop()
-	{
-		$this->context->smarty->assign('search_query', (string)Tools::getValue('search_query'));
-		return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
+    {
+        if ($this->registered)
+        {
+            $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
+            //$this->context->smarty->assign('search_query', $query);
+            $this->context->smarty->assign('search_query_block', (string)Tools::getValue('search_query'));
+            return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
+        }
+        else
+        {
+            $cookie = new Cookie('psAdmin');
+
+            if ($cookie->id_employee)
+            {
+                return 'Convermax search is disabled. Please configure it.';
+            }
+        }
 	}
+
+    public function hookdispalyNav()
+    {
+        if ($this->registered)
+        {
+            $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
+            //$this->context->smarty->assign('search_query', $query);
+            $this->context->smarty->assign('search_query_block', (string)Tools::getValue('search_query'));
+            return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
+        }
+        else
+        {
+            $cookie = new Cookie('psAdmin');
+
+            if ($cookie->id_employee)
+            {
+                return 'Convermax search is disabled. Please configure it.';
+            }
+        }
+    }
 
 	public function hookLeftColumn()
 	{
@@ -182,8 +288,8 @@ class Convermax extends Module
 				'ProductId' => Tools::getValue('id_product')
 			);
 
-		$convermax = new ConvermaxAPI();
-		$convermax->track('AddToCart', $event_params);
+		    $convermax = new ConvermaxAPI();
+		    $convermax->track('AddToCart', $event_params);
 		}
 	}
 
@@ -203,8 +309,8 @@ class Convermax extends Module
 
 	public function hookBackOfficeHeader()
 	{
-		$this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
-		$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
+		//$this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
+		//$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
 	}
 
 	public function hookActionProductAdd($params)
@@ -221,5 +327,14 @@ class Convermax extends Module
 	{
 		Cmsearch::deleteProduct($params['id_product']);
 	}
+
+    public function cron()
+    {
+        $context = Context::getContext();
+        //need for Product::getPriceStatic() method
+        $context->employee = true;
+
+        Cmsearch::indexation();
+    }
 
 }

@@ -81,7 +81,7 @@ function onPlayerPercent(e) {
 }
 ////
 
-setInterval(checkIndexStatus, 5000);
+//setInterval(checkIndexStatus, 5000);
 
 $(document).ready(function() {
     $("a.gallery").fancybox({
@@ -96,7 +96,8 @@ $(document).ready(function() {
             trackers = ga.getAll();
             if(trackers.length) {
                 linker = new window.gaplugins.Linker(trackers[0]);
-                destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
+                //destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
+                destinationUrl = linker.decorate('https://rebel03_cm_admin/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
             }
             ga('send', 'event', 'Presta', 'ClickOnConnectButton');
         }
@@ -113,34 +114,50 @@ $(document).ready(function() {
         $(".connectionbutton").css('display', 'block');
     });
     $("#reindex").click(function(e){
-        //e.preventDefault();
+        //$(this).attr('disabled','disabled');
+        //setTimeout(checkIndexStatus, 15000);
+        $("#reindex").val('Indexing...');
+        $("#reindex").attr('disabled','disabled');
         $.ajax({
-            //method: "POST",
             url: $(this).attr('data-url'),
-            //data: { action: value },
-            success: function () {
-                $(this).attr('disabled','disabled');
+            complete: function () {
+                getIndexedProducts();
+                $("#reindex").val('Reindex');
+                $("#reindex").removeAttr('disabled');
             }
         });
     })
 });
 
+var interval;
+checkIndexStatus();
+
 function checkIndexStatus() {
     $.ajax({
-        //method: "POST",
-        url: $("#indexation").attr('data-url'),
-        //data: { action: value },
+        url: cm_url + '/indexing/status/json',
         success: function (result) {
-            //result = JSON.parse(result);
             if(result.InProgress == true) {
-                $("#reindex").attr('disabled','disabled');
+                $("#reindex").val('Indexing...');
+                $("#reindex").attr('disabled', 'disabled');
                 $("#indexation").css('display', 'block');
                 $("#total_items").text(result.TotalEntries);
                 $("#current_item").text(result.CurrentEntry);
+                setTimeout(checkIndexStatus, 10000);
             } else {
+                $("#reindex").val('Reindex');
                 $("#reindex").removeAttr('disabled');
                 $("#indexation").css('display', 'none');
-            }
+                clearInterval(interval);
+             }
+        }
+    });
+}
+
+function getIndexedProducts() {
+    $.ajax({
+        url: cm_url + '/healthcheck/json',
+        success: function (result) {
+            $("#indexed_items").text(result.ItemsInIndex.Actual);
         }
     });
 }
