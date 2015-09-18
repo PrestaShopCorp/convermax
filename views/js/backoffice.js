@@ -96,8 +96,7 @@ $(document).ready(function() {
             trackers = ga.getAll();
             if(trackers.length) {
                 linker = new window.gaplugins.Linker(trackers[0]);
-                //destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
-                destinationUrl = linker.decorate('https://rebel03_cm_admin/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
+                destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
             }
             ga('send', 'event', 'Presta', 'ClickOnConnectButton');
         }
@@ -114,8 +113,6 @@ $(document).ready(function() {
         $(".connectionbutton").css('display', 'block');
     });
     $("#reindex").click(function(e){
-        //$(this).attr('disabled','disabled');
-        //setTimeout(checkIndexStatus, 15000);
         $("#reindex").val('Indexing...');
         $("#reindex").attr('disabled','disabled');
         $.ajax({
@@ -129,9 +126,6 @@ $(document).ready(function() {
     })
 });
 
-var interval;
-checkIndexStatus();
-
 function checkIndexStatus() {
     $.ajax({
         url: cm_url + '/indexing/status/json',
@@ -142,12 +136,10 @@ function checkIndexStatus() {
                 $("#indexation").css('display', 'block');
                 $("#total_items").text(result.TotalEntries);
                 $("#current_item").text(result.CurrentEntry);
-                setTimeout(checkIndexStatus, 10000);
             } else {
                 $("#reindex").val('Reindex');
                 $("#reindex").removeAttr('disabled');
                 $("#indexation").css('display', 'none');
-                clearInterval(interval);
              }
         }
     });

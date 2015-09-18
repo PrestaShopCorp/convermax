@@ -32,15 +32,7 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
             return;
 
         $facets = Tools::getValue('cm_select');
-
-		//$query = Tools::replaceAccentedChars(urldecode(Tools::getValue('q')));
-		//$original_query = Tools::getValue('q');
-
-		//added facets check. If facets exists do don display empty query message
-		//if ((($query = Tools::getValue('search_query', Tools::getValue('ref'))) && !is_array($query)) || $facets)
-		//{
         $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
-        //$query = Tools::getValue('search_query');
         $this->productSort();
 
         $this->n = abs((int)Tools::getValue('n', (isset($this->context->cookie->nb_item_per_page) ?
@@ -55,7 +47,6 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
         if($search)
         {
 			if (isset($search['cm_result']->Actions[0]->RedirectUrl) && !Tools::getValue('ajax'))
-				//die(Tools::redirect($search['cm_result']->Actions[0]->RedirectUrl));
                 die(header('Location: '.$search['cm_result']->Actions[0]->RedirectUrl));
 			$position = 1;
 			foreach ($search['result'] as &$product)
@@ -88,7 +79,6 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
 				$cm_message = false;
 
 			$this->context->smarty->assign(array(
-				/*'products' => $search['result'], */// DEPRECATED (since to 1.4), not use this: conflict with block_cart module
 				'search_products' => $search['result'],
 				'nbProducts' => $search['total'],
 				'search_query' => $original_query,
@@ -117,7 +107,6 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                         $rangemin = preg_replace('|TO .*\]|', '', $facet->{$values}[0]->Term);
                         $rangemax = preg_replace('|\[.*? |', '', $facet->{$values}[count($facet->{$values}) - 1]->Term);
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . ' = []' . ";\r\n";
-                        //$facets_params .= 'cm_params.sliders.'.$facet->{$field_name}.'[0] = "'.$facet->{$values}[0]->Term."\";\r\n";
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . '[0] = "' . $rangemin . $rangemax . "\";\r\n";
                     }
                 }
@@ -150,7 +139,6 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'search_products' => array(),
                 'nbProducts' => 0,
                 'search_query' => $original_query,
-                /*'cm_message' => 'nothing found',*/
                 'query' => $query,
                 'pagenumber' => $this->p,
                 'pagesize' => $this->n

@@ -59,26 +59,19 @@ class Convermax extends Module
         if (!parent::install()
 		|| !$this->registerHook('leftColumn')
 		|| !$this->registerHook('header')
-		|| !$this->registerHook('backOfficeHeader')
 		|| !$this->registerHook('top')
-		|| !$this->registerHook('displayNav')
 		|| !$this->registerHook('productTab')
 		|| !$this->registerHook('actionCartSave')
 		|| !$this->registerHook('actionPaymentConfirmation')
 		|| !$this->registerHook('actionProductAdd')
 		|| !$this->registerHook('actionProductUpdate')
 		|| !$this->registerHook('actionProductDelete')
-		/*|| !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21'))*/
-		|| !Configuration::updateValue('CONVERMAX_URL', 'https://rebel03_cm_services/v2')
+		|| !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v21')
         || !Configuration::updateValue('CONVERMAX_CRON_KEY', Tools::passwdGen(8)))
 			return false;
 		return true;
 	}
-    public function removeTab()
-    {
-        $tab = new Tab(Tab::getIdFromClassName('ConvermaxAdmin'));
-        return $tab->delete();
-    }
+
 	public function uninstall()
 	{
 		if (!parent::uninstall())
@@ -95,7 +88,6 @@ class Convermax extends Module
         $this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
         $this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
         Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
-        //Media::addJsDef(array('healthckeck_url' => Configuration::get('CONVERMAX_URL').'/healthcheck/json'));
 
         $this->context->smarty->assign(array(
             'url' => Configuration::get('CONVERMAX_URL'),
@@ -114,8 +106,6 @@ class Convermax extends Module
                 'indexed_items' => $indexed_items,
                 'total_items' => $total_items,
                 'cron_url' => $cron_url
-                /*'status_url' => Configuration::get('CONVERMAX_URL').'/indexing/status/json',
-                'healthckeck_url' => Configuration::get('CONVERMAX_URL').'/healthcheck/json'*/
             ));
         }
 
@@ -132,11 +122,6 @@ class Convermax extends Module
 
         if (Tools::getValue('state'))
         {
-            /*if (Tools::getValue('state') === 1)
-                return $this->displayConfirmation($this->l('Configuration updated'));
-            else
-                return $this->displayError($this->l('An error occurred while attempting to get certificate.'));
-            */
             switch (Tools::getValue('state'))
             {
                 case 1:
@@ -207,8 +192,6 @@ class Convermax extends Module
     {
         if ($this->registered)
         {
-            $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
-            //$this->context->smarty->assign('search_query', $query);
             $this->context->smarty->assign('search_query_block', (string)Tools::getValue('search_query'));
             return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
         }
@@ -225,22 +208,7 @@ class Convermax extends Module
 
     public function hookdispalyNav()
     {
-        if ($this->registered)
-        {
-            $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
-            //$this->context->smarty->assign('search_query', $query);
-            $this->context->smarty->assign('search_query_block', (string)Tools::getValue('search_query'));
-            return $this->display(__FILE__, 'views/templates/hook/search-block.tpl');
-        }
-        else
-        {
-            $cookie = new Cookie('psAdmin');
-
-            if ($cookie->id_employee)
-            {
-                return 'Convermax search is disabled. Please configure it.';
-            }
-        }
+        return $this->hookTop();
     }
 
 	public function hookLeftColumn()
@@ -277,7 +245,6 @@ class Convermax extends Module
 		);
 		$convermax = new ConvermaxAPI();
 		$convermax->track('ProductView', $event_params);
-
 	}
 
 	public function hookActionCartSave()
@@ -287,7 +254,6 @@ class Convermax extends Module
 			$event_params = array(
 				'ProductId' => Tools::getValue('id_product')
 			);
-
 		    $convermax = new ConvermaxAPI();
 		    $convermax->track('AddToCart', $event_params);
 		}
@@ -305,12 +271,6 @@ class Convermax extends Module
 		);
 		$convermax = new ConvermaxAPI();
 		$convermax->track('ConfirmOrder', $event_params);
-	}
-
-	public function hookBackOfficeHeader()
-	{
-		//$this->context->controller->addCSS($this->_path.'/views/css/backoffice.css');
-		//$this->context->controller->addJS($this->_path.'/views/js/backoffice.js');
 	}
 
 	public function hookActionProductAdd($params)

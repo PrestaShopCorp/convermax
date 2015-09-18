@@ -188,47 +188,6 @@ class ConvermaxAPI
 		return true;
 	}
 
-	public function search_curl($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
-	{
-		if ($order_by == 'position')
-		{
-			$order_by = false;
-			$order_desc = false;
-		}
-		$url = $this->url.'/search/json?query='.urlencode($query);
-		$url .= '&page='.$page_number.'&pagesize='.$page_size;
-		if ($facets)
-		{
-			$i = 0;
-			foreach ($facets as $key => $val)
-			{
-				$url .= '&facet.'.$i.'.field='.urlencode($key);
-				foreach ($val as $v)
-					$url .= '&facet.'.$i.'.selection='.urlencode($v);
-				$i++;
-			}
-		}
-
-		if ($order_by)
-			$url .= '&sort.0.fieldname='.$order_by.($order_desc ? '&sort.0.descending=true' : '');
-		$url .= '&analytics.userid='.$this->getCookie('cmuid');
-		$url .= '&analytics.sessionid='.$this->getCookie('cmsid');
-		$url .= '&analytics.useragent='.urlencode($_SERVER['HTTP_USER_AGENT']);
-		$url .= '&analytics.userip='.$_SERVER['REMOTE_ADDR'];
-		if (Tools::getValue('searchfeatures'))
-			$url .= '&analytics.eventparams.searchfeatures='.Tools::getValue('searchfeatures');
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
-		$data = curl_exec($ch);
-        if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200)
-            return false;
-		return Tools::jsonDecode($data);
-	}
-
     public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
     {
         if ($order_by == 'position')
@@ -361,7 +320,7 @@ class ConvermaxAPI
 
 	private function createTmpCertFile($cert)
 	{
-		$file = tempnam(sys_get_temp_dir(), 'PS_');
+		$file = tempnam(sys_get_temp_dir(), 'CM_');
 		file_put_contents($file, $cert);
 		return $file;
 	}
@@ -389,6 +348,7 @@ class ConvermaxAPI
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		$data = curl_exec($ch);
 		if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200)
@@ -400,15 +360,6 @@ class ConvermaxAPI
 
 	public function createIndexFields()
 	{
-		/*$properties = array();
-		$properties[0] = Product::getProductProperties(5, array('id_product'=>1));
-		if ($properties[0]['features'])
-		{
-			foreach ($properties[0]['features'] as $feature)
-				$properties[0][$feature['name']] = $feature['value'];
-			unset($properties[0]['features']);
-		}*/
-
         $fields = Cmsearch::getFields();
 
         foreach ($fields as $key => $val)

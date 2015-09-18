@@ -25,7 +25,7 @@
  */
 
 ignore_user_abort(true);
-set_time_limit(3600);
+set_time_limit(900);
 include(dirname(__FILE__).'/../../config/config.inc.php');
 include(dirname(__FILE__).'/convermax.php');
 

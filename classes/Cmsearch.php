@@ -29,44 +29,44 @@ class Cmsearch
 	public static function indexation($id_product = false, $update = false)
 	{
 		$id_lang = Cmsearch::getLangId();
-
 		$convermax = new ConvermaxAPI();
 		if (!$id_product)
 		{
 			if (!$convermax->batchStart())
 				return false;
 		}
-		$k = 0;
-		while ($products = Cmsearch::getProductsToIndex($id_lang, $id_product, $k, 200))
+        $start = 0;
+		while ($products = Cmsearch::getProductsToIndex($id_lang, $id_product, $start, 200))
 		{
-			$k = $k + 200;
+            $start = $start + 200;
 			if (count($products) == 0)
 				break;
 			$products_array = array();
 			$products_count = count($products);
-
 			for ($i = 0; $i < $products_count; $i++)
 			{
-				$products[$i]['_CatalogName'] = 'products';
 				if ($products[$i]['features'])
 				{
 					foreach ($products[$i]['features'] as $feature)
 					{
 						$f_name = 'f_'.$convermax->sanitize($feature['name']);
-						$products[$i][$f_name] = $feature['value'];
+						$products[$i][$f_name][] = $feature['value'];
 					}
 					unset($products[$i]['features']);
 				}
 				foreach ($products[$i] as $key => $val)
 				{
 					if (is_array($val))
-						unset($products[$i][$key]);
+                    {
+                        foreach($val as $k => $v)
+                        {
+                            if(is_array($v))
+                                unset($products[$i][$key]);
+                        }
+                    }
 				}
-
 				$img_id = Product::getCover($products[$i]['id_product']);
 				$link = new Link();
-				//$fix = '/';
-				//$products[$i]['img_link'] = $fix.'/'.$link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small'));
 				$products[$i]['img_link'] = str_replace(Tools::getHttpHost(), '', $link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small')));
                 $products[$i]['link'] = str_replace(Tools::getHttpHost(true), '', $products[$i]['link']);
 
@@ -79,9 +79,17 @@ class Cmsearch
 						$full_category .= $cat['name'].($j == (count($cat_full) - 1) ? '' : '>');
 					$j++;
 				}
-
 				$products[$i]['category_full'] = $full_category;
 
+                $attributes = Product::getAttributesInformationsByProduct($products[$i]['id_product']);
+                if(!empty($attributes))
+                {
+                    foreach($attributes as $attribute)
+                    {
+                        $a_name = 'a_'.$convermax->sanitize($attribute['group']);
+                        $products[$i][$a_name][] = $attribute['attribute'];
+                    }
+                }
 				if (!in_array($products[$i]['id_product'], $products_array))
 					$products_array[] = (int)$products[$i]['id_product'];
 			}
@@ -326,7 +334,6 @@ class Cmsearch
             'customization_required' => '',
             'rate' => '',
             'tax_name' => '',
-            '_CatalogName' => '',
             'img_link' => '',
             'category_full' => ''
         );
