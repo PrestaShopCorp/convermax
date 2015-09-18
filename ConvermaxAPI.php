@@ -33,7 +33,8 @@ class ConvermaxAPI
 
 	public function __construct()
 	{
-		$url = Configuration::get('CONVERMAX_URL');
+        $this->registered = Configuration::get('CONVERMAX_CERT') ? true : false;
+        $url = Configuration::get('CONVERMAX_URL');
 		if (stristr(Tools::substr($url, -1), '/'))
 			$url = Tools::substr($url, 0, -1);
 		$this->url = $url;
@@ -190,6 +191,8 @@ class ConvermaxAPI
 
     public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
     {
+        if(!$this->registered)
+            return false;
         if ($order_by == 'position')
         {
             $order_by = false;
