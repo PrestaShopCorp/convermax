@@ -70,16 +70,20 @@ class Cmsearch
 				$products[$i]['img_link'] = str_replace(Tools::getHttpHost(), '', $link->getImageLink($products[$i]['link_rewrite'], $img_id['id_image'], ImageType::getFormatedName('small')));
                 $products[$i]['link'] = str_replace(Tools::getHttpHost(true), '', $products[$i]['link']);
 
-				$cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
-				$full_category = '';
-				$j = 0;
-				foreach ($cat_full as $cat)
-				{
-					if ($j > 0)
-						$full_category .= $cat['name'].($j == (count($cat_full) - 1) ? '' : '>');
-					$j++;
-				}
-				$products[$i]['category_full'] = $full_category;
+                $cat_full = Product::getProductCategoriesFull($products[$i]['id_product']);
+                $category_full = array();
+                foreach ($cat_full as $cat)
+                {
+                    $category = new Category($cat['id_category']);
+                    $categories = $category->getParentsCategories();
+                    $c_full = array();
+                    foreach ($categories as $cats)
+                    {
+                        $c_full[] = $cats['name'];
+                    }
+                    $category_full[] = implode('>', array_reverse($c_full));
+                }
+                $products[$i]['category_full'] = $category_full;
 
                 $attributes = Product::getAttributesInformationsByProduct($products[$i]['id_product']);
                 if(!empty($attributes))

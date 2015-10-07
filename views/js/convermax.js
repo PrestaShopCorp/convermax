@@ -160,8 +160,7 @@ function cmAutocomplete(item, loc) {
 			eventParams.ProductId = item.id_product;
 			break;
 		case 'Category':
-			eventParams.Field = item.FieldName;
-			eventParams.Value = item.FacetValue;
+			eventParams.Value = item.FieldName + ':' + item.FacetValue;
 			break;
 	}
 	var event = {};

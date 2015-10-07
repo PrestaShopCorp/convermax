@@ -111,7 +111,7 @@
               <p>Cron URL: {$cron_url}</p>
           </div>
           <div>
-             <p><input type="button" data-url="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}&reindex=true" id="reindex" value="Reindex"></p>
+             <p><input type="button" data-url="{$cron_url}" id="reindex" value="Reindex"></p>
           </div>
           {*<div id="indexation" style="display: none">
               indexation in progress. Current:  <span id="current_item"></span> Sended: <span id="total_items"></span>

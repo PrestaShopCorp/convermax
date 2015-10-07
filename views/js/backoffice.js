@@ -96,7 +96,7 @@ $(document).ready(function() {
             trackers = ga.getAll();
             if(trackers.length) {
                 linker = new window.gaplugins.Linker(trackers[0]);
-                destinationUrl = linker.decorate('https://admin.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
+                destinationUrl = linker.decorate('https://my.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
             }
             ga('send', 'event', 'Presta', 'ClickOnConnectButton');
         }

@@ -67,10 +67,10 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
 				$cm_message = 'nothing found';
 			elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
 			{
-				if (!empty($search['cm_result']->Corrections[0]->Replace))
+				if (!empty($search['cm_result']->Query))
 				{
-					$cm_message = 'your request has been corrected to '.$search['cm_result']->Corrections[0]->Replace;
-					$original_query = $search['cm_result']->Corrections[0]->Replace;
+					$cm_message = 'your request has been corrected to '.$search['cm_result']->Query;
+					$original_query = $search['cm_result']->Query;
 				}
 				else
 					$cm_message = 'nothing found';
@@ -193,8 +193,8 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 $cm_message = 'nothing found';
             elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
             {
-                if (!empty($search['cm_result']->Corrections[0]->Replace))
-                    $cm_message = 'your request has been corrected to ' . $search['cm_result']->Corrections[0]->Replace;
+                if (!empty($search['cm_result']->Query))
+                    $cm_message = 'your request has been corrected to ' . $search['cm_result']->Query;
                 else
                     $cm_message = 'nothing found';
             }

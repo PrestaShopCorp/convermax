@@ -186,6 +186,14 @@ class Convermax extends Module
 
 		Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
 		Media::addJsDef(array('cm_search_url' => $cm_search_url));
+
+        $home_category = Configuration::get('PS_HOME_CATEGORY');
+        $id_category = (int)Tools::getValue('id_category', Tools::getValue('id_category_layered', $home_category));
+        if ($id_category != $home_category)
+        {
+            Media::addJsDef(array('cm_category' => true));
+            $this->context->controller->addJS($this->_path.'/views/js/convermax-search.js');
+        }
 	}
 
 	public function hookTop()
@@ -211,17 +219,78 @@ class Convermax extends Module
         return $this->hookTop();
     }
 
-	public function hookLeftColumn()
-	{
-		if (get_class($this->context->controller) == 'ConvermaxSearchModuleFrontController')
-		{
-			$this->context->smarty->assign(array(
-				'pagesize' => abs((int)Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE')))
-			));
-			return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
-		}
-		return '';
-	}
+    public function hookLeftColumn()
+    {
+        if (get_class($this->context->controller) == 'ConvermaxSearchModuleFrontController')
+        {
+            $this->context->smarty->assign(array(
+                'pagesize' => abs((int)Tools::getValue('n', Configuration::get('PS_PRODUCTS_PER_PAGE')))
+            ));
+            return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
+        }
+
+        $home_category = Configuration::get('PS_HOME_CATEGORY');
+        $id_category = (int)Tools::getValue('id_category', Tools::getValue('id_category_layered', $home_category));
+        if ($id_category != $home_category)
+        {
+            $category = new Category($id_category);
+            $categories = $category->getParentsCategories();
+            foreach ($categories as $cat)
+            {
+                if ($cat['id_category'] != $home_category)
+                {
+                    $category_full[] = $cat['name'];
+                }
+            }
+            $category_full = implode('>', array_reverse($category_full));
+            $facet = array(
+                'category_full' => array($category_full)
+            );
+            $n =abs((int)Tools::getValue('n', (isset($this->context->cookie->nb_item_per_page) ?
+                (int)$this->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+            $search = Cmsearch::find($this->context->language->id, ' ', 1, $n, 'position', 'desc', false, true, null, $facet);
+            if ($search)
+            {
+                $facets_params = '';
+                $is_ranged = 'IsRanged';
+                $field_name = 'FieldName';
+                $values = 'Values';
+                $display_name = 'DisplayName';
+                foreach ($search['cm_result']->Facets as $facet)
+                {
+                    if ($facet->{$is_ranged})
+                    {
+                            $rangemin = preg_replace('|TO .*\]|', '', $facet->{$values}[0]->Term);
+                            $rangemax = preg_replace('|\[.*? |', '', $facet->{$values}[count($facet->{$values}) - 1]->Term);
+                            $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . ' = []' . ";\r\n";
+                            $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . '[0] = "' . $rangemin . $rangemax . "\";\r\n";
+                    }
+                    else
+                    {
+                        $values_count = count($facet->{$values});
+                        for ($i = 0; $i < $values_count; $i++)
+                        {
+                            if ($facet->{$values}[$i]->Selected == true)
+                            {
+                                $facets_params .= 'cm_params.facets.' . $facet->{$field_name} . ' = []' . ";\r\n";
+                                $facets_params .= 'cm_params.facets.' . $facet->{$field_name} . '[' . $i . '] = "' . $facet->{$values}[$i]->Term . "\";\r\n";
+                                $facets_params .= 'cm_params.facets_display.' . $facet->{$field_name} . ' = "' . $facet->{$display_name} . "\";\r\n";
+                            }
+                        }
+                    }
+                }
+                $this->context->smarty->assign(array(
+                    'facets' => $search['cm_result']->Facets,
+                    'query' => ' ',
+                    'pagenumber' => 1,
+                    'pagesize' => $n,
+                    'facets_params' => isset($facets_params) ? $facets_params : false
+                ));
+                return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
+            }
+        }
+        return '';
+    }
 
 	public function hookProductTab($params)
 	{
