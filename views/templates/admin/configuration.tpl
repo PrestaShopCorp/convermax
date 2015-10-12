@@ -105,13 +105,13 @@
           </div>
       {else}
           <div class="indexed">
-              <p>Indexed products: <span id="indexed_items">{$indexed_items}</span>{*/{$total_items}*}</p>
+              <p>Indexed products: <span id="indexed_items">{$indexed_items|escape:'html':'UTF-8'}</span>{*/{$total_items}*}</p>
           </div>
           <div class="indexed">
-              <p>Cron URL: {$cron_url}</p>
+              <p>Cron URL: {$cron_url|escape:'html':'UTF-8'}</p>
           </div>
           <div>
-             <p><input type="button" data-url="{$cron_url}" id="reindex" value="Reindex"></p>
+             <p><input type="button" data-url="{$cron_url|escape:'html':'UTF-8'}" id="reindex" value="Reindex"></p>
           </div>
           {*<div id="indexation" style="display: none">
               indexation in progress. Current:  <span id="current_item"></span> Sended: <span id="total_items"></span>

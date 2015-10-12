@@ -58,7 +58,7 @@
                             {assign var="flag" value=true}
                         {/if}
                         <div>
-                        <label><input type="checkbox" class="checkbox" value="{$value->Term}" data-fieldname="{$facet->FieldName}" data-displayname="{$facet->DisplayName}"{if $value->Selected} checked{/if}>{$value->Value} ({$value->HitCount})</label>
+                        <label><input type="checkbox" class="checkbox" value="{$value->Term|escape:'html':'UTF-8'}" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}"{if $value->Selected} checked{/if}>{$value->Value|escape:'html':'UTF-8'} ({$value->HitCount|escape:'html':'UTF-8'})</label>
                         </div>
                         {counter}
                     {/foreach}

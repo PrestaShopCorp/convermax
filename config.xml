@@ -2,7 +2,7 @@
 <module>
 	<name>convermax</name>
 	<displayName><![CDATA[Convermax]]></displayName>
-	<version><![CDATA[1.0.1]]></version>
+	<version><![CDATA[1.2.0]]></version>
 	<description><![CDATA[Convermax search module]]></description>
 	<author><![CDATA[CONVERMAX CORP]]></author>
 	<tab><![CDATA[search_filter]]></tab>

@@ -18,18 +18,19 @@
  * versions in the future. If you wish to customize PrestaShop for your
  * needs please refer to http://www.prestashop.com for more information.
  *
- *  @author    CONVERMAX CORP <info@convermax.com>
- *  @copyright 2015 CONVERMAX CORP
- *  @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @author    CONVERMAX CORP <info@convermax.com>
+ * @copyright 2015 CONVERMAX CORP
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of CONVERMAX CORP
  */
 
 class ConvermaxSearchModuleFrontController extends ModuleFrontController
 {
-	public function initContent()
-	{
-        if (Tools::getValue('ajax'))
+    public function initContent()
+    {
+        if (Tools::getValue('ajax')) {
             return;
+        }
 
         $facets = Tools::getValue('cm_select');
         $query = Tools::getValue('search_query') ? Tools::getValue('search_query') : ' ';
@@ -44,47 +45,44 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
         $query = Tools::replaceAccentedChars(urldecode($query));
 
         $search = Cmsearch::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay, false, true, null, $facets);
-        if($search)
-        {
-			if (isset($search['cm_result']->Actions[0]->RedirectUrl) && !Tools::getValue('ajax'))
-                die(header('Location: '.$search['cm_result']->Actions[0]->RedirectUrl));
-			$position = 1;
-			foreach ($search['result'] as &$product)
-			{
-				$product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&').'search_query='.urlencode($query).'&results='.(int)$search['total'].
-					'&pid='.(int)$product['id_product'].'&position='.$position.'&page='.$this->p.'&num='.$this->n;
-				$position++;
-			}
+        if ($search) {
+            if (isset($search['cm_result']->Actions[0]->RedirectUrl) && !Tools::getValue('ajax')) {
+                Tools::redirect(Tools::getShopDomainSsl(true).$search['cm_result']->Actions[0]->RedirectUrl);
+            }
+            $position = 1;
+            foreach ($search['result'] as &$product) {
+                $product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&') . 'search_query=' . urlencode($query) . '&results=' . (int)$search['total'] .
+                    '&pid=' . (int)$product['id_product'] . '&position=' . $position . '&page=' . $this->p . '&num=' . $this->n;
+                $position++;
+            }
 
-			Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
-			$nbProducts = $search['total'];
+            Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
+            $nbProducts = $search['total'];
 
-			$this->pagination($nbProducts);
+            $this->pagination($nbProducts);
 
-			$this->addColorsToProductList($search['result']);
+            $this->addColorsToProductList($search['result']);
 
-			if (stripos($search['cm_result']->State, 'nothing'))
-				$cm_message = 'nothing found';
-			elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
-			{
-				if (!empty($search['cm_result']->Query))
-				{
-					$cm_message = 'your request has been corrected to '.$search['cm_result']->Query;
-					$original_query = $search['cm_result']->Query;
-				}
-				else
-					$cm_message = 'nothing found';
-			}
-			else
-				$cm_message = false;
+            if (stripos($search['cm_result']->State, 'nothing')) {
+                $cm_message = 'nothing found';
+            } elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply) {
+                if (!empty($search['cm_result']->Query)) {
+                    $cm_message = 'your request has been corrected to ' . $search['cm_result']->Query;
+                    $original_query = $search['cm_result']->Query;
+                } else {
+                    $cm_message = 'nothing found';
+                }
+            } else {
+                $cm_message = false;
+            }
 
-			$this->context->smarty->assign(array(
-				'search_products' => $search['result'],
-				'nbProducts' => $search['total'],
-				'search_query' => $original_query,
-				'cm_message' => $cm_message,
-				'related_searches' => $search['cm_result']->SeeAlsoQueries,
-				'homeSize' => Image::getSize(ImageType::getFormatedName('home'))
+            $this->context->smarty->assign(array(
+                'search_products' => $search['result'],
+                'nbProducts' => $search['total'],
+                'search_query' => $original_query,
+                'cm_message' => $cm_message,
+                'related_searches' => $search['cm_result']->SeeAlsoQueries,
+                'homeSize' => Image::getSize(ImageType::getFormatedName('home'))
             ));
 
             $facets_params = '';
@@ -92,31 +90,22 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
             $field_name = 'FieldName';
             $values = 'Values';
             $display_name = 'DisplayName';
-            foreach ($search['cm_result']->Facets as $facet)
-            {
+            foreach ($search['cm_result']->Facets as $facet) {
                 //get slider selection from url
-                if ($facet->{$is_ranged})
-                {
-                    if ($facets[$facet->{$field_name}])
-                    {
+                if ($facet->{$is_ranged}) {
+                    if ($facets[$facet->{$field_name}]) {
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . ' = []' . ";\r\n";
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . '[0] = "' . $facets[$facet->{$field_name}][0] . "\";\r\n";
-                    }
-                    else
-                    {
+                    } else {
                         $rangemin = preg_replace('|TO .*\]|', '', $facet->{$values}[0]->Term);
                         $rangemax = preg_replace('|\[.*? |', '', $facet->{$values}[count($facet->{$values}) - 1]->Term);
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . ' = []' . ";\r\n";
                         $facets_params .= 'cm_params.sliders.' . $facet->{$field_name} . '[0] = "' . $rangemin . $rangemax . "\";\r\n";
                     }
-                }
-                else
-                {
+                } else {
                     $values_count = count($facet->{$values});
-                    for ($i = 0; $i < $values_count; $i++)
-                    {
-                        if ($facet->{$values}[$i]->Selected == true)
-                        {
+                    for ($i = 0; $i < $values_count; $i++) {
+                        if ($facet->{$values}[$i]->Selected == true) {
                             $facets_params .= 'cm_params.facets.' . $facet->{$field_name} . ' = []' . ";\r\n";
                             $facets_params .= 'cm_params.facets.' . $facet->{$field_name} . '[' . $i . '] = "' . $facet->{$values}[$i]->Term . "\";\r\n";
                             $facets_params .= 'cm_params.facets_display.' . $facet->{$field_name} . ' = "' . $facet->{$display_name} . "\";\r\n";
@@ -132,10 +121,8 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'pagesize' => $this->n,
                 'facets_params' => isset($facets_params) ? $facets_params : false
             ));
-		}
-		else
-		{
-			$this->context->smarty->assign(array(
+        } else {
+            $this->context->smarty->assign(array(
                 'search_products' => array(),
                 'nbProducts' => 0,
                 'search_query' => $original_query,
@@ -143,42 +130,39 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'pagenumber' => $this->p,
                 'pagesize' => $this->n
             ));
-		}
-		$this->context->smarty->assign(array(
-			'add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'),
-			'comparator_max_item' => Configuration::get('PS_COMPARATOR_MAX_ITEM')));
+        }
+        $this->context->smarty->assign(array(
+            'add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'),
+            'comparator_max_item' => Configuration::get('PS_COMPARATOR_MAX_ITEM')));
 
-		$this->setTemplate('search.tpl');
-		parent::initContent();
-	}
+        $this->setTemplate('search.tpl');
+        parent::initContent();
+    }
 
-	public function setMedia()
-	{
-		parent::setMedia();
-		$this->addCSS(_THEME_CSS_DIR_.'product_list.css');
-	}
+    public function setMedia()
+    {
+        parent::setMedia();
+        $this->addCSS(_THEME_CSS_DIR_ . 'product_list.css');
+    }
 
-	public function displayAjax()
-	{
-		$query = Tools::getValue('search_query');
+    public function displayAjax()
+    {
+        $query = Tools::getValue('search_query');
 
-		$original_query = $query;
-		$query = Tools::replaceAccentedChars(urldecode($query));
+        $original_query = $query;
+        $query = Tools::replaceAccentedChars(urldecode($query));
 
-		$this->productSort();
-		$this->n = abs((int)Tools::getValue('n', (isset($this->context->cookie->nb_item_per_page) ?
-			(int)$this->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE'))));
-		$this->p = abs((int)Tools::getValue('p', 1));
+        $this->productSort();
+        $this->n = abs((int)Tools::getValue('n', (isset($this->context->cookie->nb_item_per_page) ?
+            (int)$this->context->cookie->nb_item_per_page : Configuration::get('PS_PRODUCTS_PER_PAGE'))));
+        $this->p = abs((int)Tools::getValue('p', 1));
 
-		$facets = Tools::getValue('cm_select');
+        $facets = Tools::getValue('cm_select');
 
-		$search = Cmsearch::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy,
-			$this->orderWay, false, true, null, $facets);
-        if($search)
-        {
+        $search = Cmsearch::find($this->context->language->id, $query, $this->p, $this->n, $this->orderBy, $this->orderWay, false, true, null, $facets);
+        if ($search) {
             $position = 1;
-            foreach ($search['result'] as &$product)
-            {
+            foreach ($search['result'] as &$product) {
                 $product['link'] .= (strpos($product['link'], '?') === false ? '?' : '&') . 'search_query=' . urlencode($query) . '&results=' . (int)$search['total'] .
                     '&pid=' . (int)$product['id_product'] . '&position=' . $position . '&page=' . $this->p . '&num=' . $this->n;
                 $position++;
@@ -189,20 +173,20 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
             $this->pagination($nbProducts);
             $this->addColorsToProductList($search['result']);
 
-            if (stripos($search['cm_result']->State, 'nothing'))
+            if (stripos($search['cm_result']->State, 'nothing')) {
                 $cm_message = 'nothing found';
-            elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply)
-            {
-                if (!empty($search['cm_result']->Query))
+            } elseif (!empty($search['cm_result']->Corrections) && $search['cm_result']->Corrections[0]->Apply) {
+                if (!empty($search['cm_result']->Query)) {
                     $cm_message = 'your request has been corrected to ' . $search['cm_result']->Query;
-                else
+                } else {
                     $cm_message = 'nothing found';
-            }
-            else
+                }
+            } else {
                 $cm_message = false;
+            }
 
             $this->context->smarty->assign(array(
-                 'search_products' => $search['result'],
+                'search_products' => $search['result'],
                 'nbProducts' => $search['total'],
                 'search_query' => !empty($search['cm_result']->OriginalQuery) ? $search['cm_result']->OriginalQuery : ' ',
                 'cm_message' => $cm_message,
@@ -225,9 +209,7 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'facets' => $facets,
                 'redirect_url' => isset($search['cm_result']->Actions[0]->RedirectUrl) ? $search['cm_result']->Actions[0]->RedirectUrl : false
             );
-        }
-        else
-        {
+        } else {
             $this->context->smarty->assign(array(
 
                 'search_products' => $search['result'],
@@ -244,6 +226,6 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
             );
         }
 
-		echo Tools::jsonEncode($vars);
-	}
+        echo Tools::jsonEncode($vars);
+    }
 }

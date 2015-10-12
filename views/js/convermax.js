@@ -32,15 +32,15 @@ $(document).ready(function()
 	var input = $("<input>")
 		.attr("type", "hidden")
 		.attr("name", "searchfeatures").val("QueryTyped");
-	$("#search_query_" + cm_blocksearch_type).parent('form').append($(input));
+	$("#cm_search_query_" + cm_blocksearch_type).parent('form').append($(input));
 
 	//autocomplete part
 	//$("#cm_search_query_" + cm_blocksearch_type).unautocomplete();
 
-	var width_ac_results = 	$("#search_query_" + cm_blocksearch_type).parent('form').width();
+	var width_ac_results = 	$("#cm_search_query_" + cm_blocksearch_type).parent('form').width();
 	if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof cm_blocksearch_type !== 'undefined' && cm_blocksearch_type)
 
-		$("#search_query_" + cm_blocksearch_type).autocomplete(
+		$("#cm_search_query_" + cm_blocksearch_type).autocomplete(
 
 			cm_url + '/autocomplete/json',
 			{
@@ -69,7 +69,7 @@ $(document).ready(function()
 					var mytab = new Array();
 					var displayproduct = true;
 					var displaycat = true;
-					var term = $("#search_query_" + cm_blocksearch_type).val();
+					var term = $("#cm_search_query_" + cm_blocksearch_type).val();
 					for (var i = 0; i < data.length; i++) {
 						if (data[i].Type == 'Product' && displayproduct) {
 							mytab[mytab.length] = { data: 'Product Search:', value: 'group' };
@@ -86,7 +86,7 @@ $(document).ready(function()
 					return mytab;
 				},
 				extraParams: {
-					query: function(){return $("#search_query_" + cm_blocksearch_type).val()}
+					query: function(){return $("#cm_search_query_" + cm_blocksearch_type).val()}
 				}
 			}
 		)

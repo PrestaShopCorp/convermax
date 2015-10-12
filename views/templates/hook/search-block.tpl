@@ -22,15 +22,15 @@
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of CONVERMAX CORP
 *}
-<div id="search_block_top" class="col-sm-4 clearfix">
-    <form id="searchbox" method="get" action="{$cm_search_url|escape:'html':'UTF-8'}" >
+<div id="cm_search_block_top" class="col-sm-4 clearfix">
+    <form id="cm_searchbox" method="get" action="{$cm_search_url|escape:'html':'UTF-8'}" >
         <input type="hidden" name="fc" value="module" />
         <input type="hidden" name="module" value="convermax" />
         <input type="hidden" name="controller" value="search" />
         <input type="hidden" name="orderby" value="position" />
         <input type="hidden" name="orderway" value="desc" />
-        <input class="search_query form-control" type="text" id="search_query_top" name="search_query" placeholder="{l s='Search' mod='convermax'}" value="{$search_query_block|escape:'htmlall':'UTF-8'|stripslashes}" />
-        <button type="submit" name="submit_search" class="btn btn-default button-search">
+        <input class="search_query form-control" type="text" id="cm_search_query_top" name="search_query" placeholder="{l s='Search' mod='convermax'}" value="{$search_query_block|escape:'htmlall':'UTF-8'|stripslashes}" />
+        <button type="submit" name="cm_submit_search" class="btn btn-default button-search">
             <span>{l s='Search' mod='convermax'}</span>
         </button>
     </form>

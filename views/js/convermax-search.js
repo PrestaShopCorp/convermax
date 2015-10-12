@@ -68,7 +68,7 @@ var cm_params = {
 						data += (i == 0 ? '' : '&') + 'cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.facets[keys[i]][j]) + (j == (this.facets[keys[i]].length - 1) ? '' : '&');
 					}
 					if (format == 'list') {
-						data += '<li><span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j] + '\');cm_reload();">[x]</span>' + this.facets_display[keys[i]] + ' - ' + this.facets[keys[i]][j] + '</li>';
+						data += '<li><span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j].replace(/'/g, "\\'") + '\');cm_reload();">[x]</span>' + this.facets_display[keys[i]] + ' - ' + this.facets[keys[i]][j] + '</li>';
 					}
 				}
 			}

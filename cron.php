@@ -18,22 +18,20 @@
  * versions in the future. If you wish to customize PrestaShop for your
  * needs please refer to http://www.prestashop.com for more information.
  *
- *  @author    CONVERMAX CORP <info@convermax.com>
- *  @copyright 2015 CONVERMAX CORP
- *  @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @author    CONVERMAX CORP <info@convermax.com>
+ * @copyright 2015 CONVERMAX CORP
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of CONVERMAX CORP
  */
 
 ignore_user_abort(true);
 set_time_limit(900);
-include(dirname(__FILE__).'/../../config/config.inc.php');
-include(dirname(__FILE__).'/convermax.php');
+include(dirname(__FILE__) . '/../../config/config.inc.php');
+include(dirname(__FILE__) . '/convermax.php');
 
-if (isset($_GET['key']))
-{
+if (Tools::getIsset('key')) {
     $key = Configuration::get('CONVERMAX_CRON_KEY');
-    if (!empty($key) && $key === $_GET['key'])
-    {
+    if (!empty($key) && $key === $_GET['key']) {
         $convermax = new Convermax();
         $convermax->cron();
     }

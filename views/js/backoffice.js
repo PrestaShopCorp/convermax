@@ -118,7 +118,7 @@ $(document).ready(function() {
         $.ajax({
             url: $(this).attr('data-url'),
             complete: function () {
-                getIndexedProducts();
+                //getIndexedProducts();
                 $("#reindex").val('Reindex');
                 $("#reindex").removeAttr('disabled');
             }
