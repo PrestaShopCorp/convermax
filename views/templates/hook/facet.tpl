@@ -29,7 +29,7 @@
         <div class="cm_facet">
             <p class="cm_facet_title" onclick="toggleFacet(this)">{$facet->DisplayName|escape:'html':'UTF-8'}</p>
             {if $facet->IsRanged}
-                <div class="slider_pad cm_facetbody"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-range="{$facet->Values[0]->Term|regex_replace:"/ .*\]/":""} {$facet->Values[{$facet->Values|@count}-1]->Term|regex_replace:"/\[.*? /":""}"></div></div>
+                <div class="slider_pad cm_facetbody"><div class="cm_slider" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-range="{$facet->Values[0]->Term|regex_replace:"/ .*\]/":""|escape:'html':'UTF-8'} {$facet->Values[{$facet->Values|@count}-1]->Term|regex_replace:"/\[.*? /":""|escape:'html':'UTF-8'}"></div></div>
             {elseif $facet->IsTree}
                 <div class="cm_tree cm_facetbody">
                     {counter assign=i start=0 print=false}
