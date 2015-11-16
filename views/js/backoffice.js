@@ -98,7 +98,7 @@ $(document).ready(function() {
                 linker = new window.gaplugins.Linker(trackers[0]);
                 destinationUrl = linker.decorate('https://my.convermax.com/v2/signup?returnUrl=' + encodeURIComponent(document.location.href));
             }
-            ga('send', 'event', 'Presta', 'ClickOnConnectButton');
+            ga('send', 'event', 'Presta', 'ClickOnConnectButton', window.location.hostname);
         }
         window.open(destinationUrl, '_blank');
     });

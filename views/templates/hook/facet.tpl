@@ -25,6 +25,7 @@
 {foreach from=$facets item=facet}
     {assign var="flag" value=false}
     {assign var="tree_flag" value=false}
+    {assign var="color_flag" value=false}
     {if $facet->Values}
         <div class="cm_facet">
             <p class="cm_facet_title" onclick="toggleFacet(this)">{$facet->DisplayName|escape:'html':'UTF-8'}</p>
@@ -47,6 +48,27 @@
                         </div>
                         <span class="cm_more_link" onclick="toggleList(this)">Show more</span>
                         {assign var="tree_flag" value=false}
+                    {/if}
+                </div>
+            {elseif $facet->FieldName == 'a_Color'}
+                <div class="cm_color cm_facetbody clearfix">
+                    {counter assign=j start=0 print=false}
+                    {foreach from=$facet->Values item=value}
+                    {if $j > 19 and $color_flag == false}
+                    <div class="cm_more_results" style="display:none">
+                        {assign var="color_flag" value=true}
+                        {/if}
+                        <div class="cm_color_pick" title="{$value->Value|escape:'html':'UTF-8'} ({$value->HitCount|escape:'html':'UTF-8'})" data-fieldname="{$facet->FieldName|escape:'html':'UTF-8'}" data-displayname="{$facet->DisplayName|escape:'html':'UTF-8'}" data-value="{$value->Term|escape:'html':'UTF-8'}"  data-displayvalue="{$value->Value|escape:'html':'UTF-8'}" data-checked="{if $value->Selected}true{else}false{/if}">
+                            <div class="cm_color_color" style="background: {if file_exists($col_img_dir|cat:$value->Term|cat:'.jpg')}url({$img_col_dir}{$value->Term}.jpg); background-size: cover;{else}{$value->ColorCode}{/if}{if $value->Selected}; border: 2px solid red{/if}">
+                            </div>
+                            <div class="cm_color_name"><span class="ccolor">{$value->Value|escape:'html':'UTF-8'}</span> <span class="cnumber">({$value->HitCount|escape:'html':'UTF-8'})</span></div>
+                        </div>
+                        {counter}
+                        {/foreach}
+                        {if $color_flag == true}
+                    </div>
+                    <span class="cm_more_link" onclick="toggleList(this)">Show more</span>
+                    {assign var="color_flag" value=false}
                     {/if}
                 </div>
             {else}

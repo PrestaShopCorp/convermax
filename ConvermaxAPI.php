@@ -29,6 +29,7 @@ class ConvermaxAPI
 
     private $base_url;
     private $url;
+    private $surl;
     private $cert;
 
     public function __construct()
@@ -38,12 +39,24 @@ class ConvermaxAPI
             $url = Tools::substr($url, 0, -1);
         }
         $this->url = $url;
-        $this->cert = $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT'));
-        if (preg_match('|(.*?://api\.convermax\.com/.*?)/.*|', $url, $matches)) {
+        if (preg_match('|(.*?://.*?\.convermax\.com/.*?)/.*|', $url, $matches)) {
             $this->base_url = $matches[1];
         } else {
             $this->base_url = $url;
         }
+
+        $surl = Configuration::get('CONVERMAX_SURL');
+        if (stristr(Tools::substr($surl, -1), '/')) {
+            $surl = Tools::substr($surl, 0, -1);
+        }
+        $this->surl = $surl;
+        if (preg_match('|(.*?://.*?\.convermax\.com/.*?)/.*|', $surl, $matches)) {
+            $this->base_surl = $matches[1];
+        } else {
+            $this->base_surl = $surl;
+        }
+
+        $this->cert = $this->createTmpCertFile(Configuration::get('CONVERMAX_CERT'));
     }
 
     public function __destruct()
@@ -58,8 +71,8 @@ class ConvermaxAPI
         if ($this->inProgress()) {
             return false;
         }
-        $url = $this->url . '/batchupdate/start?incremental=false';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/batchupdate/start?incremental=false';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -75,8 +88,8 @@ class ConvermaxAPI
 
     public function batchEnd()
     {
-        $url = $this->url . '/batchupdate/end';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/batchupdate/end';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -92,8 +105,8 @@ class ConvermaxAPI
 
     public function batchAdd($items)
     {
-        $url = $this->url . '/batchupdate/add';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/batchupdate/add';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -114,8 +127,8 @@ class ConvermaxAPI
 
     public function batchUpdate($items)
     {
-        $url = $this->url . '/batchupdate/update';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/batchupdate/update';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -139,8 +152,8 @@ class ConvermaxAPI
         if ($this->inProgress()) {
             return false;
         }
-        $url = $this->url . '/update/add?incremental=true';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/update/add?incremental=true';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -164,8 +177,8 @@ class ConvermaxAPI
         if ($this->inProgress()) {
             return false;
         }
-        $url = $this->url . '/update/update';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/update/update';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -189,8 +202,8 @@ class ConvermaxAPI
         if ($this->inProgress()) {
             return false;
         }
-        $url = $this->url . '/update/deletebymask';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/update/deletebymask';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
@@ -240,18 +253,20 @@ class ConvermaxAPI
         }
 
         $url = str_replace('https://', 'http://', $url);
+        preg_match('|.*?://(.*?\.convermax\.com)/.*?|', $url, $matches);
+        $host = $matches[1];
         $request = "GET $url HTTP/1.1\r\n" .
             "Accept:*/*\r\n" .
             "Accept-Encoding:gzip, deflate\r\n" .
-            "Host:api.convermax.com\r\n" .
+            "Host:$host\r\n" .
             "User-Agent:Convermax Prestashop\r\n\r\n";
 
-        if (!$fp = pfsockopen('192.99.149.223', 80)) {
+        if (!$fp = @pfsockopen($host, 80, $errno, $errstr, 3)) {
             return false;
         }
         if (!fwrite($fp, $request)) {
             fclose($fp);
-            if (!$fp = pfsockopen('192.99.149.223', 80)) {
+            if (!$fp = @pfsockopen($host, 80, $errno, $errstr, 3)) {
                 return false;
             }
             if (!fwrite($fp, $request)) {
@@ -305,7 +320,7 @@ class ConvermaxAPI
 
     public function track($event_type, $event_params)
     {
-        if (!$this->cert || !$this->getCookie('cmuid') || $this->getCookie('cmsid')) {
+        if (!$this->cert || !$this->getCookie('cmuid') || !$this->getCookie('cmsid')) {
             return true;
         }
         $params = array(
@@ -318,6 +333,7 @@ class ConvermaxAPI
         );
 
         $url = $this->url . '/track';
+        $url = str_replace('https://', 'http://', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($params));
@@ -369,8 +385,8 @@ class ConvermaxAPI
     public function getHash()
     {
         $name = urlencode(Configuration::get('PS_SHOP_NAME'));
-        $url = $this->base_url . '/scheme/create?name=' . $name . '&template=prestashop';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->base_surl . '/scheme/create?name=' . $name . '&template=prestashop';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -383,6 +399,9 @@ class ConvermaxAPI
         }
         $this->url = $this->base_url . '/' . str_replace('"', '', $data);
         Configuration::updateValue('CONVERMAX_URL', $this->url);
+
+        $this->surl = $this->base_surl . '/' . str_replace('"', '', $data);
+        Configuration::updateValue('CONVERMAX_SURL', $this->surl);
         return true;
     }
 
@@ -395,8 +414,8 @@ class ConvermaxAPI
             $s_fields[$this->sanitize(($key))] = '';
         }
 
-        $url = $this->url . '/scheme/createfields?catalog=products';
-        $url = str_replace('api.', 'admin.', $url);
+        $url = $this->surl . '/scheme/createfields?catalog=products';
+        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode(array($s_fields)));

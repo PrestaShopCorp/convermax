@@ -61,7 +61,9 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
 
             $this->pagination($nbProducts);
 
-            $this->addColorsToProductList($search['result']);
+            if (version_compare(_PS_VERSION_, '1.6.0', '>=') === true) {
+                $this->addColorsToProductList($search['result']);
+            }
 
             if (stripos($search['cm_result']->State, 'nothing')) {
                 $cm_message = 'nothing found';
@@ -119,17 +121,24 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'query' => $search['cm_result']->OriginalQuery,
                 'pagenumber' => $this->p,
                 'pagesize' => $this->n,
-                'facets_params' => isset($facets_params) ? $facets_params : false
+                'facets_params' => isset($facets_params) ? $facets_params : false,
+                'col_img_dir' => _PS_COL_IMG_DIR_
             ));
         } else {
-            $this->context->smarty->assign(array(
+            /*$this->context->smarty->assign(array(
                 'search_products' => array(),
                 'nbProducts' => 0,
                 'search_query' => $original_query,
                 'query' => $query,
                 'pagenumber' => $this->p,
                 'pagesize' => $this->n
-            ));
+            ));*/
+            $params = array(
+                'orderby' => $this->orderBy,
+                'orderway' => $this->orderWay,
+                'search_query' => $query
+            );
+            Tools::redirect($this->context->link->getPageLink('search', true, null, $params));
         }
         $this->context->smarty->assign(array(
             'add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'),
@@ -171,7 +180,9 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
             Hook::exec('actionSearch', array('expr' => $query, 'total' => $search['total']));
             $nbProducts = $search['total'];
             $this->pagination($nbProducts);
-            $this->addColorsToProductList($search['result']);
+            if (version_compare(_PS_VERSION_, '1.6.0', '>=') === true) {
+                $this->addColorsToProductList($search['result']);
+            }
 
             if (stripos($search['cm_result']->State, 'nothing')) {
                 $cm_message = 'nothing found';
@@ -190,7 +201,9 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'nbProducts' => $search['total'],
                 'search_query' => !empty($search['cm_result']->OriginalQuery) ? $search['cm_result']->OriginalQuery : ' ',
                 'cm_message' => $cm_message,
-                'homeSize' => Image::getSize(ImageType::getFormatedName('home'))
+                'homeSize' => Image::getSize(ImageType::getFormatedName('home')),
+                'add_prod_display' => Configuration::get('PS_ATTRIBUTE_CATEGORY_DISPLAY'),
+                'comparator_max_item' => Configuration::get('PS_COMPARATOR_MAX_ITEM')
             ));
 
             $list = $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'convermax/views/templates/front/search.tpl');
@@ -200,6 +213,7 @@ class ConvermaxSearchModuleFrontController extends ModuleFrontController
                 'query' => $search['cm_result']->Query,
                 'pagenumber' => $this->p,
                 'pagesize' => $this->n,
+                'col_img_dir' => _PS_COL_IMG_DIR_
             ));
 
             $facets = $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'convermax/views/templates/hook/facet.tpl');

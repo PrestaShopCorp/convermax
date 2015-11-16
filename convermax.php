@@ -38,7 +38,7 @@ class Convermax extends Module
     {
         $this->name = 'convermax';
         $this->tab = 'search_filter';
-        $this->version = '1.2.0';
+        $this->version = '2.1';
         $this->author = 'CONVERMAX CORP';
         $this->module_key = '0958874296fcb714c52c9a74f5fdb88f';
 
@@ -68,7 +68,8 @@ class Convermax extends Module
             || !$this->registerHook('actionProductAdd')
             || !$this->registerHook('actionProductUpdate')
             || !$this->registerHook('actionProductDelete')
-            || !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2')
+            || !Configuration::updateValue('CONVERMAX_URL', 'https://client.convermax.com/v2')
+            || !Configuration::updateValue('CONVERMAX_SURL', 'https://api.convermax.com/v2')
             || !Configuration::updateValue('CONVERMAX_CRON_KEY', Tools::passwdGen(8))
         ) {
             return false;
@@ -82,6 +83,7 @@ class Convermax extends Module
             return false;
         }
         Configuration::deleteByName('CONVERMAX_URL');
+        Configuration::deleteByName('CONVERMAX_SURL');
         Configuration::deleteByName('CONVERMAX_CERT');
         Configuration::deleteByName('CONVERMAX_CRON_KEY');
         return true;
@@ -92,10 +94,12 @@ class Convermax extends Module
 
         $this->context->controller->addCSS($this->_path . '/views/css/backoffice.css');
         $this->context->controller->addJS($this->_path . '/views/js/backoffice.js');
-        Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
+
+        $out = $this->postProcess();
 
         $this->context->smarty->assign(array(
             'url' => Configuration::get('CONVERMAX_URL'),
+            'surl' => Configuration::get('CONVERMAX_SURL'),
             'module_dir' => $this->_path,
             'registered' => $this->registered
         ));
@@ -109,11 +113,12 @@ class Convermax extends Module
             $this->context->smarty->assign(array(
                 'indexed_items' => $indexed_items,
                 'total_items' => $total_items,
-                'cron_url' => $cron_url
+                'cron_url' => $cron_url,
+                'cm_url' => Configuration::get('CONVERMAX_URL')
             ));
         }
 
-        return $this->postProcess() . $this->context->smarty->fetch(dirname(__FILE__) . '/views/templates/admin/configuration.tpl');
+        return $out . $this->context->smarty->fetch(dirname(__FILE__) . '/views/templates/admin/configuration.tpl');
     }
 
     public function postProcess()
@@ -164,10 +169,16 @@ class Convermax extends Module
             } else {
                 $url = Tools::getvalue('url');
             }
-            if (!$url) {
-                return $this->displayError($this->l('Enter URL'));
+            if (stristr(Tools::substr(Tools::getvalue('surl'), -1), '/')) {
+                $surl = Tools::substr(Tools::getvalue('surl'), 0, -1);
+            } else {
+                $surl = Tools::getvalue('surl');
+            }
+            if (!$url || !$surl) {
+                return $this->displayError($this->l('Enter URLs'));
             }
             Configuration::updateValue('CONVERMAX_URL', $url);
+            Configuration::updateValue('CONVERMAX_SURL', $surl);
             return $this->displayConfirmation($this->l('Configuration updated'));
         }
     }
@@ -177,7 +188,11 @@ class Convermax extends Module
         $this->context->controller->addJQueryUI('ui.slider');
         $this->context->controller->addJqueryPlugin('cooki-plugin');
         $this->context->controller->addJS($this->_path . '/views/js/convermax.js');
-        $this->context->controller->addCSS($this->_path . '/views/css/convermax.css');
+        if (version_compare(_PS_VERSION_, '1.6.0', '>=') === true) {
+            $this->context->controller->addCSS($this->_path . '/views/css/convermax.css');
+        } else {
+            $this->context->controller->addCSS($this->_path . '/views/css/convermax-1.5.css');
+        }
 
         if (get_class($this->context->controller) == 'ConvermaxSearchModuleFrontController') {
             $this->context->controller->addJS($this->_path . '/views/js/convermax-search.js');
@@ -185,16 +200,15 @@ class Convermax extends Module
 
         $cm_search_url = $this->context->link->getModuleLink('convermax', 'search');
         $this->context->smarty->assign('cm_search_url', $cm_search_url);
-
-        Media::addJsDef(array('cm_url' => Configuration::get('CONVERMAX_URL')));
-        Media::addJsDef(array('cm_search_url' => $cm_search_url));
+        $this->context->smarty->assign('cm_url', Configuration::get('CONVERMAX_URL'));
 
         $home_category = Configuration::get('PS_HOME_CATEGORY');
         $id_category = (int)Tools::getValue('id_category', Tools::getValue('id_category_layered', $home_category));
         if ($id_category != $home_category) {
-            Media::addJsDef(array('cm_category' => true));
+            $this->context->smarty->assign('cm_category', true);
             $this->context->controller->addJS($this->_path . '/views/js/convermax-search.js');
         }
+        return $this->display(__FILE__, 'views/templates/hook/header.tpl');
     }
 
     public function hookTop()
@@ -273,7 +287,8 @@ class Convermax extends Module
                     'query' => ' ',
                     'pagenumber' => 1,
                     'pagesize' => $n,
-                    'facets_params' => isset($facets_params) ? $facets_params : false
+                    'facets_params' => isset($facets_params) ? $facets_params : false,
+                    'col_img_dir' => _PS_COL_IMG_DIR_
                 ));
                 return $this->display(__FILE__, 'views/templates/hook/facets.tpl');
             }

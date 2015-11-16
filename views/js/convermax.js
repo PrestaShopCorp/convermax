@@ -38,7 +38,7 @@ $(document).ready(function()
 	//$("#cm_search_query_" + cm_blocksearch_type).unautocomplete();
 
 	var width_ac_results = 	$("#cm_search_query_" + cm_blocksearch_type).parent('form').width();
-	if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof cm_blocksearch_type !== 'undefined' && cm_blocksearch_type)
+	//if (typeof ajaxsearch != 'undefined' && ajaxsearch && typeof cm_blocksearch_type !== 'undefined' && cm_blocksearch_type)
 
 		$("#cm_search_query_" + cm_blocksearch_type).autocomplete(
 

@@ -22,6 +22,9 @@
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of CONVERMAX CORP
 *}
+<script>
+    var cm_url = '{$cm_url|escape:'html':'UTF-8'}';
+</script>
 <style>
   .nobootstrap { min-width:720px !important;}
 </style>
@@ -42,7 +45,7 @@
           <div class="freeblock">
             <div class="start"><span class="starleft"></span>Limited Time Offer<span class="starright"></span></div>
             We'll waive the setup fees for new Convermax users on Prestashop — that's a $500+ value!<br>
-            And to make the offer even sweeter, you'll get the first two month of service at no charge.
+            And to make the offer even sweeter, you'll get the first month of service at no charge.
             <input type="button" id="startbutton" value="I want this offer. Let's get started!">
           </div>
           <div class="featuresblock">
@@ -67,9 +70,13 @@
                 <h3> {l s='Have your connection info?' mod='convermax'}  <br>{l s='Configure it now' mod='convermax'}</h3>
                   <p>{l s='If you dont have connection info please sign up' mod='convermax'}</p>
                   <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" method="post" enctype="multipart/form-data">
-                  <label for="url">{l s='Service URL' mod='convermax'}:</label>
+                  <label for="surl">{l s='Secure URL' mod='convermax'}:</label>
                   <div>
-                    <input type="text" size="20" id="url" name="url" value="{$url|escape:'html':'UTF-8'}">
+                    <input type="text" size="20" id="surl" name="surl" value="{$url|escape:'html':'UTF-8'}">
+                  </div>
+                  <label for="url">{l s='Non-secure URL' mod='convermax'}:</label>
+                  <div>
+                      <input type="text" size="20" id="url" name="url" value="{$url|escape:'html':'UTF-8'}">
                   </div>
                   <label for="fileUpload">{l s='Certificate' mod='convermax'}:</label>
                   <div>
@@ -122,7 +129,11 @@
                   <h3> {l s='Have your connection info?' mod='convermax'}  <br>{l s='Configure it now' mod='convermax'}</h3>
                   <p>{l s='If you dont have connection info please sign up' mod='convermax'}</p>
                   <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" method="post" enctype="multipart/form-data">
-                      <label for="url">{l s='Service URL' mod='convermax'}:</label>
+                      <label for="surl">{l s='Secure URL' mod='convermax'}:</label>
+                      <div>
+                          <input type="text" size="20" id="surl" name="surl" value="{$surl|escape:'html':'UTF-8'}">
+                      </div>
+                      <label for="url">{l s='Non-secure URL' mod='convermax'}:</label>
                       <div>
                           <input type="text" size="20" id="url" name="url" value="{$url|escape:'html':'UTF-8'}">
                       </div>
