@@ -22,9 +22,11 @@
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of CONVERMAX CORP
 *}
+{if $registered}
 <script>
     var cm_url = '{$cm_url|escape:'html':'UTF-8'}';
 </script>
+{/if}
 <style>
   .nobootstrap { min-width:720px !important;}
 </style>
