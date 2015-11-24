@@ -72,42 +72,48 @@ class ConvermaxAPI
             return false;
         }
         $url = $this->surl . '/batchupdate/start?incremental=false';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
         $data = curl_exec($ch);
         if (curl_errno($ch) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 204) {
-            return false;
+            $result =  false;
+        } else {
+            $result = true;
         }
-        unset($data);
-        return true;
+        curl_close($ch);
+        (unset)$data;
+        return $result;
     }
 
     public function batchEnd()
     {
         $url = $this->surl . '/batchupdate/end';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSLCERT, $this->cert);
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
-        return true;
+        curl_close($ch);
+        (unset)$data;
+        return $result;
     }
 
     public function batchAdd($items)
     {
         $url = $this->surl . '/batchupdate/add';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -118,18 +124,21 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function batchUpdate($items)
     {
         $url = $this->surl . '/batchupdate/update';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -140,11 +149,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function add($items)
@@ -153,8 +165,8 @@ class ConvermaxAPI
             return false;
         }
         $url = $this->surl . '/update/add?incremental=true';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -165,11 +177,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function update($items)
@@ -178,8 +193,8 @@ class ConvermaxAPI
             return false;
         }
         $url = $this->surl . '/update/update';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -190,11 +205,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function delete($items)
@@ -203,8 +221,8 @@ class ConvermaxAPI
             return false;
         }
         $url = $this->surl . '/update/deletebymask';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($items));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -215,11 +233,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function search($query, $page_number = 0, $page_size = 10, $facets = null, $order_by = 'position', $order_desc = false)
@@ -307,14 +328,17 @@ class ConvermaxAPI
         $url .= '&analytics.useragent=' . urlencode($_SERVER['HTTP_USER_AGENT']);
         $url .= '&analytics.userip=' . $_SERVER['REMOTE_ADDR'];
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         $data = curl_exec($ch);
         if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
+            curl_close($ch);
             return false;
         }
+        curl_close($ch);
         return $data;
     }
 
@@ -335,6 +359,7 @@ class ConvermaxAPI
         $url = $this->url . '/track';
         $url = str_replace('https://', 'http://', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode($params));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -344,11 +369,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     private function getCookie($name)
@@ -370,24 +398,28 @@ class ConvermaxAPI
     {
         $url = $this->base_url . '/createcertificate?token=' . $token;
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         $data = curl_exec($ch);
         if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 201) {
+            curl_close($ch);
             return false;
+        } else {
+            curl_close($ch);
+            Configuration::updateValue('CONVERMAX_CERT', $data);
+            file_put_contents($this->cert, $data);
+            return true;
         }
-        Configuration::updateValue('CONVERMAX_CERT', $data);
-        file_put_contents($this->cert, $data);
-        return true;
     }
 
     public function getHash()
     {
         $name = urlencode(Configuration::get('PS_SHOP_NAME'));
         $url = $this->base_surl . '/scheme/create?name=' . $name . '&template=prestashop';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -395,14 +427,16 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch) || empty($data) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
+            curl_close($ch);
             return false;
+        } else {
+            curl_close($ch);
+            $this->url = $this->base_url . '/' . str_replace('"', '', $data);
+            Configuration::updateValue('CONVERMAX_URL', $this->url);
+            $this->surl = $this->base_surl . '/' . str_replace('"', '', $data);
+            Configuration::updateValue('CONVERMAX_SURL', $this->surl);
+            return true;
         }
-        $this->url = $this->base_url . '/' . str_replace('"', '', $data);
-        Configuration::updateValue('CONVERMAX_URL', $this->url);
-
-        $this->surl = $this->base_surl . '/' . str_replace('"', '', $data);
-        Configuration::updateValue('CONVERMAX_SURL', $this->surl);
-        return true;
     }
 
     public function createIndexFields()
@@ -415,8 +449,8 @@ class ConvermaxAPI
         }
 
         $url = $this->surl . '/scheme/createfields?catalog=products';
-        //$url = str_replace('client.', 'api.', $url);
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Tools::jsonEncode(array($s_fields)));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -427,11 +461,14 @@ class ConvermaxAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
         $data = curl_exec($ch);
         if (curl_errno($ch)) {
-            return false;
+            $result = false;
+        } else {
+            $result = true;
         }
-        unset($data);
+        curl_close($ch);
+        (unset)$data;
 
-        return true;
+        return $result;
     }
 
     public function sanitize($string)
@@ -447,33 +484,39 @@ class ConvermaxAPI
     {
         $url = $this->url . '/healthcheck/json';
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         $data = curl_exec($ch);
-        if (curl_errno($ch)) {
-            return false;
+        if (curl_errno($ch) || !($data = Tools::jsonDecode($data))) {
+            curl_close($ch);
+            return 0;
+        } else {
+            curl_close($ch);
+            $items_in_index = 'ItemsInIndex';
+            return isset($data->{$items_in_index}->Actual) ? (int)$data->{$items_in_index}->Actual : 0;
         }
-        $data = Tools::jsonDecode($data);
-        $items_in_index = 'ItemsInIndex';
-        return isset($data->{$items_in_index}->Actual) ? (int)$data->{$items_in_index}->Actual : 0;
     }
 
     public function inProgress()
     {
         $url = $this->url . '/indexing/status/json';
         $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         $data = curl_exec($ch);
-        if (curl_errno($ch)) {
+        if (curl_errno($ch) || !($data = Tools::jsonDecode($data))) {
+            curl_close($ch);
             return false;
+        } else {
+            curl_close($ch);
+            $in_progress = 'InProgress';
+            return $data->{$in_progress};
         }
-        $data = Tools::jsonDecode($data);
-        $in_progress = 'InProgress';
-        return $data->{$in_progress};
     }
 }

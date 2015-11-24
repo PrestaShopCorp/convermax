@@ -413,12 +413,13 @@ class Cmsearch
         return $fields;
     }
 
-    public static function getColor($id_attribute) {
+    public static function getColor($id_attribute)
+    {
         $sql = 'SELECT name, color
-        FROM ps_attribute, ps_attribute_lang
-        WHERE ps_attribute.id_attribute = ps_attribute_lang.id_attribute
+        FROM `' . _DB_PREFIX_ . 'attribute`, `' . _DB_PREFIX_ . 'attribute_lang`
+        WHERE `' . _DB_PREFIX_ . 'attribute`.id_attribute = `' . _DB_PREFIX_ . 'attribute_lang`.id_attribute
         AND id_lang = '.Cmsearch::getLangId().'
-        AND ps_attribute.id_attribute = '.$id_attribute;
+        AND `' . _DB_PREFIX_ . 'attribute`.id_attribute = '.$id_attribute;
         $row = Db::getInstance()->executeS($sql);
         return $row[0];
     }

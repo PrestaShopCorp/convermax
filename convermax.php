@@ -38,7 +38,7 @@ class Convermax extends Module
     {
         $this->name = 'convermax';
         $this->tab = 'search_filter';
-        $this->version = '2.1';
+        $this->version = '2.2.0';
         $this->author = 'CONVERMAX CORP';
         $this->module_key = '0958874296fcb714c52c9a74f5fdb88f';
 
@@ -68,8 +68,8 @@ class Convermax extends Module
             || !$this->registerHook('actionProductAdd')
             || !$this->registerHook('actionProductUpdate')
             || !$this->registerHook('actionProductDelete')
-            || !Configuration::updateValue('CONVERMAX_URL', 'https://client.convermax.com/v2')
-            || !Configuration::updateValue('CONVERMAX_SURL', 'https://api.convermax.com/v2')
+            || !Configuration::updateValue('CONVERMAX_URL', 'https://api.convermax.com/v2')
+            || !Configuration::updateValue('CONVERMAX_SURL', 'https://admin.convermax.com/v2')
             || !Configuration::updateValue('CONVERMAX_CRON_KEY', Tools::passwdGen(8))
         ) {
             return false;

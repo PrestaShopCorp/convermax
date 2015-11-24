@@ -68,7 +68,6 @@
             </div>
             <div class="rcol">
               <div class="connectionform" style="display:none">
-                  <a class="hideconnectionform" href="#">{l s='Hide connection form' mod='convermax'}</a>
                 <h3> {l s='Have your connection info?' mod='convermax'}  <br>{l s='Configure it now' mod='convermax'}</h3>
                   <p>{l s='If you dont have connection info please sign up' mod='convermax'}</p>
                   <form action="{$smarty.server.REQUEST_URI|escape:'html':'UTF-8'}" method="post" enctype="multipart/form-data">
@@ -89,9 +88,6 @@
                   </div>
                 </form>
               </div>
-                <div class="connectionbutton">
-                    <a class="showconnectionform" href="#">{l s='Show connection form' mod='convermax'}</a>
-                </div>
             </div>
             <div class="clear"></div>
           </div>
