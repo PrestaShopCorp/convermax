@@ -28,17 +28,20 @@ var cm_params = {
     sliders_display: {},
 	trees: {},
 	facets_display: {},
+	facets_displayvalue: {},
 	page: '',
 	size: '',
 	orderby: 'position',
 	orderway: 'desc',
-	SetFacet: function(checked, fieldname, value, displayname) {
-		if(checked) {
+	SetFacet: function(checked, fieldname, value, displayname, displayvalue) {
+        displayvalue = displayvalue || false;
+        if(checked) {
 			if(!this.facets[fieldname]) {
 				this.facets[fieldname] = [];
 			}
 			this.facets[fieldname].push(value);
 			this.facets_display[fieldname] = displayname;
+			this.facets_displayvalue[value] = displayvalue;
 		} else {
 			for (var i = 0; i < this.facets[fieldname].length; i++) {
 				if(this.facets[fieldname][i] == value) {
@@ -68,7 +71,7 @@ var cm_params = {
 						data += (i == 0 ? '' : '&') + 'cm_select[' + encodeURIComponent(keys[i]) + '][]=' + encodeURIComponent(this.facets[keys[i]][j]) + (j == (this.facets[keys[i]].length - 1) ? '' : '&');
 					}
 					if (format == 'list') {
-						data += '<li><span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j].replace(/'/g, "\\'") + '\');cm_reload();">[x]</span>' + this.facets_display[keys[i]] + ' - ' + this.facets[keys[i]][j] + '</li>';
+						data += '<li><span onclick="cm_params.SetFacet(false, \'' + keys[i] + '\', \'' + this.facets[keys[i]][j].replace(/'/g, "\\'") + '\');cm_reload();">[x]</span>' + this.facets_display[keys[i]] + ' - ' + (this.facets_displayvalue[this.facets[keys[i]][j]] ? this.facets_displayvalue[this.facets[keys[i]][j]] : this.facets[keys[i]][j]) + '</li>';
 					}
 				}
 			}
@@ -115,6 +118,7 @@ $(document).ready(function()
 
     cm_initSliders();
     cm_initTrees();
+    cm_initColor();
 
     if (typeof cm_category == 'undefined') {
 
@@ -197,6 +201,19 @@ function cm_initTrees()
 		params.searchfeatures = 'FacetSelected';
 		cm_reload(params);
 	});
+}
+
+function cm_initColor()
+{
+    $('.cm_color_pick').click(function(e)
+    {
+        e.preventDefault();
+        cm_params.page = 1;
+        cm_params.SetFacet(this.dataset.checked == 'false' ? true : false, this.dataset.fieldname, this.dataset.value, this.dataset.displayname, this.dataset.displayvalue);
+        var params = {};
+        params.searchfeatures = 'FacetSelected';
+        cm_reload(params);
+    });
 }
 
 function cm_displayCurrentSearchBlock() {
@@ -291,6 +308,7 @@ function cm_reload(params) {
 				cm_paginationButton();
 				cm_initSliders();
 				cm_initTrees();
+                cm_initColor();
 				ajaxLoaderOn = 0;
 
 
@@ -339,7 +357,9 @@ function cm_paginationButton() {
 
 
 function cm_init() {
-	$("#cm_facets input[type='checkbox'], select.form-control").uniform();
+	if ($().uniform) {
+		$("#cm_facets input[type='checkbox'], select.form-control").uniform();
+	}
     cm_resize();
     if (typeof cm_category == 'undefined') {
         $('div.pagination form').on('submit', function (e) {

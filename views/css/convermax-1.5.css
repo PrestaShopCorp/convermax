@@ -1,4 +1,30 @@
 #cm_search_block_top {
+    position:absolute;
+	right: 26%;
+    top: 34px; }
+#cm_search_block_top p {padding:0;}
+#cm_search_block_top #cm_searchbox {
+    float: left;
+    width: 100%; }
+#cm_search_block_top .button-search {
+    border:none;
+	border-radius:0;
+	color:#fff;
+	text-transform:uppercase;
+	background:/*url(img/bg_search_submit.png) repeat-x 0 0 */#101010;
+	float: left;
+	height: 25px; }
+#cm_search_block_top #cm_search_query_top {
+    padding:0 5px;
+	height:23px;
+	width:300px;/* 310 */
+	border:1px solid #666;
+	border-right: 0 !important;
+	color:#666;
+	background:/*url(img/bg_search_input.png) repeat-x 0 0 */#fff;
+	float: left; }
+/*
+#cm_search_block_top {
     padding-top: 50px; }
 #cm_search_block_top #cm_searchbox {
     float: left;
@@ -31,22 +57,20 @@
     height: 45px;
     background: #fbfbfb;
     margin-right: 1px; }
-
+*/
 
 form#cm_searchbox {
-    position: relative; }
+    padding-top:5px }
 form#cm_searchbox label {
-    color: #333; }
+    color:#333;margin-bottom:1px }
 form#cm_searchbox input#search_query_block {
-    margin-right: 10px;
-    max-width: 222px;
-    margin-bottom: 10px;
-    display: inline-block;
-    float: left; }
-form#cm_searchbox .button.button-small {
-    float: left; }
-form#cm_searchbox .button.button-small i {
-    margin-right: 0; }
+    border: 1px solid #CCCCCC;
+	-webkit-border-radius:3px !important;
+	-moz-border-radius:3px !important;
+	border-radius:3px !important;
+    height: 18px;
+	margin-top:10px; }
+#cm_search_button{padding: 1px 4px;}
 
 
 #facets_block div.checker {
@@ -74,7 +98,7 @@ form#cm_searchbox .button.button-small i {
 }
 
 .cm_slider {
-    margin:0 8px 15px 8px;
+    margin-bottom: 9px;
 }
 
 .cm_ajax_loader {
@@ -130,13 +154,7 @@ form#cm_searchbox .button.button-small i {
 .cm_block .list-block #facets_block li input { vertical-align:middle;}
 .cm_block .list-block #facets_block li div.checker span { top:0;}
 
+.slider_pad { padding:0 20px;}
 #searchbox input.search_query { font-size:18px;}
 
 .alert-info{ font-size:18px;}
-
-.cm_color_pick { margin:0 0 5px 0; display:inline-block; width:60px; text-align:center; vertical-align:top;}
-.cm_color_pick .cm_color_color {width: 55px; height: 55px; border:1px solid #d6d4d4; cursor:pointer; margin:0 auto 5px auto;}
-.cm_color_pick .cm_color_color:hover { border:1px solid #ff0000;}
-.cm_color_pick .cm_color_name {cursor:pointer; text-align:left; width:55px;}
-.cm_color_pick .cm_color_name .ccolor {width:40px; text-overflow:ellipsis; float:left; display:block; white-space:nowrap; overflow:hidden;}
-.cm_color_pick .cm_color_name .cnumber { display:block; float:right; }

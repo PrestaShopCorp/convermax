@@ -84,13 +84,56 @@ class Cmsearch
                 }
                 $products[$i]['category_full'] = $category_full;
 
-                $attributes = Product::getAttributesInformationsByProduct($products[$i]['id_product']);
-                if (!empty($attributes)) {
-                    foreach ($attributes as $attribute) {
-                        $a_name = 'a_' . $convermax->sanitize($attribute['group']);
-                        $products[$i][$a_name][] = $attribute['attribute'];
+                $products[$i]['ean13'] = array($products[$i]['ean13']);
+                $products[$i]['upc'] = array($products[$i]['upc']);
+                $products[$i]['reference'] = array($products[$i]['reference']);
+                $products[$i]['supplier_reference'] = array($products[$i]['supplier_reference']);
+                $product = new Product($products[$i]['id_product']);
+                $combinations = Product::getProductAttributesIds($products[$i]['id_product']);
+                $attribs = array();
+                $ean13 = array();
+                $upc = array();
+                $reference = array();
+                $supplier_reference = array();
+                foreach ($combinations as $combination) {
+                    $comb = $product->getAttributeCombinationsById($combination['id_product_attribute'], $id_lang);
+                    foreach ($comb as $com) {
+                        $a_name = 'a_'.$convermax->sanitize($com['group_name']);
+                        if ($com['is_color_group'] == 1) {
+                            $attribs[$a_name][] = $com['id_attribute'];
+                        } else {
+                            $attribs[$a_name][] = $com['attribute_name'];
+                        }
+                        if (!empty($com['ean13'])) {
+                            $ean13[] = $com['ean13'];
+                        }
+                        if (!empty($com['upc'])) {
+                            $upc[] = $com['upc'];
+                        }
+                        if (!empty($com['reference'])) {
+                            $reference[] = $com['reference'];
+                        }
+                        if (!empty($com['supplier_reference'])) {
+                            $supplier_reference[] = $com['supplier_reference'];
+                        }
                     }
                 }
+                foreach ($attribs as $k => $v) {
+                    $products[$i][$k] = array_values(array_unique($v));
+                }
+                if (!empty($ean13)) {
+                    $products[$i]['ean13'] = array_merge((array)$products[$i]['ean13'], array_unique($ean13));
+                }
+                if (!empty($upc)) {
+                    $products[$i]['upc'] = array_merge((array)$products[$i]['upc'], array_unique($upc));
+                }
+                if (!empty($reference)) {
+                    $products[$i]['reference'] = array_merge((array)$products[$i]['reference'], array_unique($reference));
+                }
+                if (!empty($supplier_reference)) {
+                    $products[$i]['supplier_reference'] = array_merge((array)$products[$i]['supplier_reference'], array_unique($supplier_reference));
+                }
+
                 if (!in_array($products[$i]['id_product'], $products_array)) {
                     $products_array[] = (int)$products[$i]['id_product'];
                 }
@@ -160,7 +203,7 @@ class Cmsearch
         $product_order_by = rtrim($product_pool, ',');
 
         if (empty($product_pool)) {
-            return ($ajax ? array() : array('total' => 0, 'result' => array()));
+            return array('total' => 0, 'result' => array(), 'cm_result' => $search_results);
         }
         $product_pool = ((strpos($product_pool, ',') === false) ? (' = ' . (int)$product_pool . ' ') : (' IN (' . rtrim($product_pool, ',') . ') '));
 
@@ -204,6 +247,18 @@ class Cmsearch
             $result_properties = false;
         } else {
             $result_properties = Product::getProductsProperties((int)$id_lang, $result);
+        }
+
+        $count = count($search_results->Facets);
+        for ($i = 0; $i < $count; $i++) {
+            if ($search_results->Facets[$i]->FieldName == 'a_Color') {
+                $c = count($search_results->Facets[$i]->Values);
+                for ($j = 0; $j < $c; $j++) {
+                    $colors = Cmsearch::getColor($search_results->Facets[$i]->Values[$j]->Term);
+                    $search_results->Facets[$i]->Values[$j]->Value = $colors['name'];
+                    $search_results->Facets[$i]->Values[$j]->ColorCode = empty($colors['color']) ? '#FFFFFF' : $colors['color'];
+                }
+            }
         }
 
         return array('total' => $total, 'result' => $result_properties, 'cm_result' => $search_results);
@@ -356,5 +411,16 @@ class Cmsearch
         }
 
         return $fields;
+    }
+
+    public static function getColor($id_attribute)
+    {
+        $sql = 'SELECT name, color
+        FROM `' . _DB_PREFIX_ . 'attribute`, `' . _DB_PREFIX_ . 'attribute_lang`
+        WHERE `' . _DB_PREFIX_ . 'attribute`.id_attribute = `' . _DB_PREFIX_ . 'attribute_lang`.id_attribute
+        AND id_lang = '.Cmsearch::getLangId().'
+        AND `' . _DB_PREFIX_ . 'attribute`.id_attribute = '.$id_attribute;
+        $row = Db::getInstance()->executeS($sql);
+        return $row[0];
     }
 }
